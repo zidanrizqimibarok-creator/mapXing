@@ -25,6 +25,7 @@
         #boot-screen {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .loading-ring {
             width: 160px; height: 160px; border: 3px solid rgba(255,255,255,0.05);
@@ -41,15 +42,16 @@
         }
         .gps-card { background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid var(--glass); width: 85%; max-width: 400px; }
 
-        /* --- CUSTOM MODAL --- */
-        .mx-modal {
-            position: fixed; top: -100%; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 350px; background: var(--card);
-            backdrop-filter: blur(30px); border-radius: 25px; z-index: 11000;
-            padding: 25px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            border: 1px solid var(--glass); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        /* --- LOGIN & AUTH --- */
+        #auth-screen {
+            position: fixed; inset: 0; z-index: 9999; display: none;
+            background: #000; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.5s opacity ease;
         }
-        .mx-modal.show { top: 30px; }
+        .auth-box { 
+            width: 85%; max-width: 400px; background: var(--card); padding: 45px 30px; 
+            border-radius: 40px; border: 1px solid var(--glass); transform: scale(1); transition: 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
 
         /* --- DYNAMIC ISLAND --- */
         #island {
@@ -62,29 +64,13 @@
         .isl-content { opacity: 0; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 20px 30px; box-sizing: border-box; }
         #island.active .isl-content { opacity: 1; }
 
-        /* --- AUTH SYSTEM --- */
-        #auth-screen {
-            position: fixed; inset: 0; z-index: 9999; display: none;
-            background: #000; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .auth-box { 
-            width: 85%; max-width: 400px; background: var(--card); padding: 45px 30px; 
-            border-radius: 40px; border: 1px solid var(--glass);
-        }
-        
+        /* --- UI PANELS --- */
+        #map { position: absolute; inset: 0; display: none; }
         #header-profile {
             position: absolute; top: 75px; left: 15px; z-index: 900;
             display: none; align-items: center; background: var(--card);
             padding: 10px 20px; border-radius: 50px; border: 1px solid var(--glass);
         }
-
-        /* --- MAP & VEHICLE --- */
-        #map { position: absolute; inset: 0; display: none; }
-        .v-container { position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .v-glow { position: absolute; width: 40px; height: 40px; background: var(--accent); border-radius: 50%; filter: blur(15px); opacity: 0.4; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 0.2; } 100% { transform: scale(0.8); opacity: 0.4; } }
-        .vehicle-img { width: 48px; height: 48px; z-index: 2; transform: rotate(-90deg); }
-
         .ui-panel {
             position: absolute; bottom: 25px; left: 15px; right: 15px;
             background: var(--card); backdrop-filter: blur(40px);
@@ -93,25 +79,44 @@
         }
         .ui-panel.hide { transform: translateY(130%); }
 
+        /* --- VEHICLE & GLOW --- */
+        .v-container { position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+        .v-glow { position: absolute; width: 40px; height: 40px; background: var(--accent); border-radius: 50%; filter: blur(15px); opacity: 0.4; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 0.2; } 100% { transform: scale(0.8); opacity: 0.4; } }
+        .vehicle-img { width: 48px; height: 48px; z-index: 2; transform: rotate(-90deg); }
+
+        /* --- BUTTONS & INPUTS --- */
         input { 
             width: 100%; box-sizing: border-box; background: var(--glass); 
             border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 20px; 
             color: var(--text); margin-bottom: 12px; font-size: 16px; outline: none;
         }
-
         .btn { padding: 18px; border-radius: 22px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .blue { background: var(--accent); color: white; box-shadow: 0 10px 20px rgba(0,122,255,0.3); }
         .green { background: var(--success); color: white; }
         .red { background: var(--danger); color: white; }
-        
+
+        /* --- SIDE CONTROLS (FUEL & REST) --- */
+        #side-ctrl {
+            position: absolute; right: 15px; top: 40%;
+            display: none; flex-direction: column; gap: 12px; z-index: 1500;
+        }
+        .circle-btn { width: 55px; height: 55px; border-radius: 50%; background: var(--card); border: 1px solid var(--glass); font-size: 22px; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
+
         #recenter-btn {
             position: absolute; right: 15px; bottom: 320px; z-index: 1500;
             width: 55px; height: 55px; border-radius: 50%; background: var(--accent);
-            border: none; color: white; display: none; font-size: 22px; box-shadow: 0 8px 20px rgba(0,122,255,0.4);
+            border: none; color: white; display: none; font-size: 22px;
         }
 
-        /* --- 3D MARKER POI --- */
-        .poi-marker { font-size: 30px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); cursor: pointer; }
+        .mx-modal {
+            position: fixed; top: -100%; left: 50%; transform: translateX(-50%);
+            width: 85%; max-width: 350px; background: var(--card);
+            backdrop-filter: blur(30px); border-radius: 25px; z-index: 11000;
+            padding: 25px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            border: 1px solid var(--glass); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .mx-modal.show { top: 30px; }
     </style>
 </head>
 <body>
@@ -125,21 +130,15 @@
     <div class="gps-card">
         <h1 style="font-size: 50px; margin: 0;">🛰️</h1>
         <h2>Akses Lokasi Aktif</h2>
-        <p style="opacity: 0.6;">mapXing butuh izin GPS asli agar Navigasi 3D tidak eror dan posisi kamu akurat.</p>
-        <button id="gps-trigger-btn" class="btn blue" style="width:100%" onclick="requestGpsPermission()">Berikan Izin Sekarang</button>
-        <p id="gps-status" style="font-size: 12px; color: var(--danger); margin-top: 10px; display: none;">Izin diperlukan untuk melanjutkan!</p>
+        <p style="opacity: 0.6;">mapXing butuh izin GPS asli agar Navigasi 3D tidak eror.</p>
+        <button class="btn blue" style="width:100%" onclick="requestGps()">Berikan Izin Sekarang</button>
     </div>
 </div>
 
-<div id="mx-modal" class="mx-modal">
-    <h3 id="modal-title" style="margin-top:0">Notifikasi</h3>
-    <p id="modal-msg" style="font-size: 14px; opacity: 0.8;"></p>
-    <button class="btn blue" style="width:100%" onclick="closeModal()">Oke</button>
-</div>
-
 <div id="auth-screen">
-    <div class="auth-box">
-        <h2>SkyMail Portal</h2>
+    <div class="auth-box" id="auth-box">
+        <h2 style="margin-bottom: 5px;">SkyMail Portal</h2>
+        <p style="font-size: 12px; opacity: 0.5; margin-bottom: 25px;">Sinkronisasi Ekosistem mapXing</p>
         <input type="text" id="u-user" placeholder="Username">
         <input type="password" id="u-pass" placeholder="Password">
         <div style="display: flex; gap: 10px;">
@@ -147,6 +146,12 @@
             <button class="btn green" style="flex:1" onclick="handleAuth('signup')">Daftar</button>
         </div>
     </div>
+</div>
+
+<div id="mx-modal" class="mx-modal">
+    <h3 id="modal-title" style="margin-top:0">Notifikasi</h3>
+    <p id="modal-msg" style="font-size: 14px; opacity: 0.8;"></p>
+    <button class="btn blue" style="width:100%" onclick="closeModal()">Oke</button>
 </div>
 
 <div id="header-profile">
@@ -161,15 +166,21 @@
             <span id="isl-time" style="font-size:32px; font-weight:900; color:var(--success);">--</span><br>
             <span id="isl-dist" style="font-size:14px; opacity:0.6;">0.0 KM</span>
         </div>
-        <div id="isl-icon">🚗</div>
+        <div id="isl-icon" style="font-size: 40px;">🚗</div>
     </div>
 </div>
 
 <div id="map"></div>
 <button id="recenter-btn" onclick="reCenter()">🎯</button>
 
+<div id="side-ctrl">
+    <button class="circle-btn" onclick="findPOI('gas_station')">⛽</button>
+    <button class="circle-btn" onclick="findPOI('cafe')">☕</button>
+    <button class="circle-btn" onclick="toggleTheme()">🌓</button>
+</div>
+
 <div id="panel-search" class="ui-panel hide">
-    <input type="text" id="in-end" placeholder="🏁 Mau kemana hari ini?">
+    <input type="text" id="in-end" placeholder="🏁 Ke mana kita hari ini?">
     <div style="display: flex; gap: 10px;">
         <button class="btn blue" style="flex:1" onclick="fetchRoute('driving')">🚗 Mobil</button>
         <button class="btn blue" style="flex:1" onclick="fetchRoute('motorcycle')">🏍️ Motor</button>
@@ -188,13 +199,13 @@
 <div id="panel-live" class="ui-panel hide">
     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
         <div style="font-size: 30px;">⬆️</div>
-        <b id="instr-text">Lurus terus ikuti jalur</b>
+        <b id="instr-text">Lurus terus ikuti jalur biru</b>
     </div>
     <button class="btn red" style="width:100%" onclick="finishJourney()">Selesai</button>
 </div>
 
 <script>
-    // --- DATABASE CONFIG ---
+    // --- DB CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
         authDomain: "xbook-global26.firebaseapp.com",
@@ -210,7 +221,6 @@
     const API_KEY = 'Tfz4m6PaapeDYSxvNHUy';
     let map, userPos, vehicle, isLive = false;
     let transportMode = 'driving';
-    let watchId = null;
 
     // --- BOOTING ---
     window.onload = () => {
@@ -230,7 +240,7 @@
     }
     function closeModal() { document.getElementById('mx-modal').classList.remove('show'); }
 
-    // --- SESSION ---
+    // --- AUTH ---
     function checkSession() {
         const s = localStorage.getItem('map_session');
         if(s) {
@@ -245,98 +255,62 @@
     async function handleAuth(type) {
         const u = document.getElementById('u-user').value.trim().toLowerCase();
         const p = document.getElementById('u-pass').value;
-        if(!u || p.length < 4) return showModal("Gagal", "Isi username & password minimal 4 karakter!");
+        if(!u || p.length < 4) return showModal("Eror", "Username/Pass minimal 4 karakter!");
 
         const ref = db.ref('users/' + u);
         const snap = await ref.once('value');
 
         if(type === 'signup') {
-            if(snap.exists()) return showModal("Eror", "Username sudah terdaftar!");
+            if(snap.exists()) return showModal("Eror", "Username sudah ada!");
             await ref.set({ pass: p, mail: u + '@sky.mail' });
-            showModal("Sukses", "Akun SkyMail aktif! Silakan masuk.");
+            showModal("Sukses", "Akun dibuat, silakan login.");
         } else {
-            if(!snap.exists() || snap.val().pass !== p) return showModal("Gagal", "Username atau Password salah!");
+            if(!snap.exists() || snap.val().pass !== p) return showModal("Login Gagal", "Cek User/Pass!");
             localStorage.setItem('map_session', u);
-            location.reload();
+            // Animasi transisi login
+            document.getElementById('auth-box').style.transform = 'scale(0.8)';
+            document.getElementById('auth-screen').style.opacity = '0';
+            setTimeout(() => location.reload(), 500);
         }
     }
 
     function logout() { localStorage.clear(); location.reload(); }
 
-    // --- FIX GPS ENGINE ---
-    function requestGpsPermission() {
-        const statusEl = document.getElementById('gps-status');
-        const btn = document.getElementById('gps-trigger-btn');
-        
-        btn.innerText = "Mencoba Mengunci GPS...";
-        statusEl.style.display = 'none';
-
-        // Pengecekan HTTPS (Sangat penting untuk Geolocation browser)
-        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-            showModal("Protokol Keamanan", "Browser membutuhkan HTTPS agar fitur GPS aktif. Pastikan URL dimulai dengan https://");
-            btn.innerText = "Berikan Izin Sekarang";
-            return;
-        }
-
+    // --- GPS FIX (WAITING FOR LOCK) ---
+    function requestGps() {
         if ("geolocation" in navigator) {
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0
-            };
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    userPos = [pos.coords.longitude, pos.coords.latitude];
-                    document.getElementById('gps-lock').style.display = 'none';
-                    initMap();
-                    startLiveTracking();
-                },
-                (err) => {
-                    let msg = "Terjadi kesalahan GPS.";
-                    if (err.code === 1) msg = "Izin ditolak! Aktifkan izin lokasi di pengaturan browser Chrome/Safari Anda.";
-                    if (err.code === 2) msg = "Posisi tidak tersedia.";
-                    if (err.code === 3) msg = "Waktu permintaan GPS habis.";
-                    
-                    showModal("GPS Error", msg);
-                    statusEl.innerText = msg;
-                    statusEl.style.display = 'block';
-                    btn.innerText = "Coba Lagi";
-                },
-                options
-            );
-        } else {
-            showModal("Tidak Support", "Browser Anda tidak mendukung fitur Geolocation.");
+            navigator.geolocation.getCurrentPosition(pos => {
+                userPos = [pos.coords.longitude, pos.coords.latitude];
+                document.getElementById('gps-lock').style.display = 'none';
+                initMap();
+                startTracking();
+            }, err => showModal("GPS Gagal", "Harap izinkan lokasi di browser!"), { enableHighAccuracy: true });
         }
     }
 
-    function startLiveTracking() {
-        if(watchId) navigator.geolocation.clearWatch(watchId);
-        
-        watchId = navigator.geolocation.watchPosition(pos => {
+    function startTracking() {
+        navigator.geolocation.watchPosition(pos => {
             userPos = [pos.coords.longitude, pos.coords.latitude];
             const heading = pos.coords.heading || 0;
-            updateVehicleMarker(userPos, heading);
-            
-            if(isLive) {
-                map.flyTo({ center: userPos, bearing: heading, pitch: 85, zoom: 19 });
-            }
-        }, err => console.log("Tracking error:", err), { enableHighAccuracy: true });
+            updateVehicle(userPos, heading);
+            if(isLive) map.flyTo({ center: userPos, bearing: heading, pitch: 85, zoom: 19 });
+        }, null, { enableHighAccuracy: true });
     }
 
+    // --- MAP ENGINE ---
     function initMap() {
         document.getElementById('map').style.display = 'block';
         document.getElementById('panel-search').classList.remove('hide');
         document.getElementById('header-profile').style.display = 'flex';
         document.getElementById('island').style.display = 'flex';
+        document.getElementById('side-ctrl').style.display = 'flex';
 
         map = new maplibregl.Map({
             container: 'map',
             style: `https://api.maptiler.com/maps/dark-v10/style.json?key=${API_KEY}`,
-            center: userPos, zoom: 16, pitch: 65, antialias: true
+            center: userPos, zoom: 16, pitch: 60, antialias: true
         });
 
-        // 3D Buildings - Fitur Tambahan
         map.on('load', () => {
             map.addLayer({
                 'id': '3d-buildings',
@@ -348,17 +322,17 @@
                     'fill-extrusion-color': '#333',
                     'fill-extrusion-height': ['get', 'render_height'],
                     'fill-extrusion-base': ['get', 'render_min_height'],
-                    'fill-extrusion-opacity': 0.8
+                    'fill-extrusion-opacity': 0.6
                 }
             });
         });
     }
 
-    function updateVehicleMarker(coords, bearing) {
+    function updateVehicle(coords, bearing) {
         if(!vehicle) {
             const el = document.createElement('div');
             el.className = 'v-container';
-            el.innerHTML = `<div class="v-glow"></div><img class="vehicle-img" src="${transportMode === 'driving' ? 'https://cdn-icons-png.flaticon.com/512/3082/3082349.png' : 'https://cdn-icons-png.flaticon.com/512/3119/3119047.png'}">`;
+            el.innerHTML = `<div class="v-glow"></div><img class="vehicle-img" src="https://cdn-icons-png.flaticon.com/512/3082/3082349.png">`;
             vehicle = new maplibregl.Marker({ element: el, rotationAlignment: 'map' }).setLngLat(coords).addTo(map);
         } else {
             vehicle.setLngLat(coords);
@@ -366,42 +340,51 @@
         }
     }
 
-    // --- NAVIGATION ---
+    // --- FEATURES (POI & NAV) ---
+    async function findPOI(type) {
+        const query = type === 'gas_station' ? 'SPBU' : 'Cafe';
+        const res = await fetch(`https://api.maptiler.com/geocoding/${query}.json?key=${API_KEY}&proximity=${userPos[0]},${userPos[1]}`);
+        const data = await res.json();
+        if(data.features.length) {
+            const poi = data.features[0];
+            showModal("Saran AI", `${query} terdekat: ${poi.text}. Klik tujuan untuk rute.`);
+            document.getElementById('in-end').value = poi.text;
+        }
+    }
+
     async function fetchRoute(mode) {
         transportMode = mode;
-        const target = document.getElementById('in-end').value;
-        if(!target) return showModal("Input", "Mau pergi ke mana?");
+        const end = document.getElementById('in-end').value;
+        if(!end) return showModal("Input", "Mau ke mana?");
 
-        const geo = await fetch(`https://api.maptiler.com/geocoding/${target}.json?key=${API_KEY}&proximity=${userPos[0]},${userPos[1]}`);
-        const res = await geo.json();
-        if(!res.features.length) return showModal("Error", "Lokasi tidak ditemukan.");
+        const geo = await fetch(`https://api.maptiler.com/geocoding/${end}.json?key=${API_KEY}&proximity=${userPos[0]},${userPos[1]}`);
+        const gData = await geo.json();
+        if(!gData.features.length) return showModal("Error", "Lokasi tidak ditemukan.");
 
-        const dest = res.features[0].center;
-        const distance = turf.distance(turf.point(userPos), turf.point(dest));
-
-        if(distance > 10) return showModal("Jarak Jauh", "Maaf, simulasi rute maksimal 10KM dari posisi Anda saat ini.");
-
-        const osrm = `https://router.project-osrm.org/route/v1/${mode}/${userPos[0]},${userPos[1]};${dest[0]},${dest[1]}?overview=full&geometries=geojson`;
+        const target = gData.features[0].center;
+        const osrm = `https://router.project-osrm.org/route/v1/${mode}/${userPos[0]},${userPos[1]};${target[0]},${target[1]}?overview=full&geometries=geojson`;
         const rRes = await fetch(osrm);
-        const data = await rRes.json();
+        const rData = await rRes.json();
 
-        if(data.code === 'Ok') {
-            drawRoute(data.routes[0].geometry);
-            document.getElementById('target-name').innerText = res.features[0].text;
-            document.getElementById('route-meta').innerText = `${Math.round(data.routes[0].duration/60)} Menit • ${(data.routes[0].distance/1000).toFixed(1)} KM`;
+        if(rData.code === 'Ok') {
+            const route = rData.routes[0];
+            drawRoute(route.geometry);
+            document.getElementById('target-name').innerText = gData.features[0].text;
+            document.getElementById('route-meta').innerText = `${Math.round(route.duration/60)} Menit • ${(route.distance/1000).toFixed(1)} KM`;
             
+            // Update Island
+            document.getElementById('isl-time').innerText = Math.round(route.duration/60) + "m";
+            document.getElementById('isl-dist').innerText = (route.distance/1000).toFixed(1) + " KM";
+
             document.getElementById('panel-search').classList.add('hide');
             document.getElementById('panel-preview').classList.remove('hide');
-
-            document.getElementById('isl-time').innerText = Math.round(data.routes[0].duration/60) + "m";
-            document.getElementById('isl-dist').innerText = (data.routes[0].distance/1000).toFixed(1) + " KM";
         }
     }
 
     function drawRoute(geo) {
-        if(map.getLayer('route')) { map.removeLayer('route'); map.removeSource('route'); }
-        map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': geo } });
-        map.addLayer({ 'id': 'route', 'type': 'line', 'source': 'route', 'paint': { 'line-color': '#007AFF', 'line-width': 10, 'line-cap': 'round' } });
+        if(map.getLayer('path')) { map.removeLayer('path'); map.removeSource('path'); }
+        map.addSource('path', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': geo } });
+        map.addLayer({ 'id': 'path', 'type': 'line', 'source': 'path', 'paint': { 'line-color': '#007AFF', 'line-width': 10, 'line-cap': 'round' } });
         
         const bounds = new maplibregl.LngLatBounds();
         geo.coordinates.forEach(c => bounds.extend(c));
@@ -414,12 +397,17 @@
         document.getElementById('panel-preview').classList.add('hide');
         document.getElementById('panel-live').classList.remove('hide');
         document.getElementById('recenter-btn').style.display = 'block';
-        map.flyTo({ center: userPos, zoom: 19, pitch: 85, duration: 2000 });
+        map.flyTo({ center: userPos, zoom: 19, pitch: 85, duration: 2500 });
     }
 
     function reCenter() { map.flyTo({ center: userPos, zoom: 19, pitch: 85 }); }
     function abortRoute() { location.reload(); }
     function finishJourney() { location.reload(); }
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        const s = document.body.classList.contains('light-mode') ? 'streets-v2' : 'dark-v10';
+        map.setStyle(`https://api.maptiler.com/maps/${s}/style.json?key=${API_KEY}`);
+    }
 </script>
 </body>
 </html>
