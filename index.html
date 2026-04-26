@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mapXing Titan Pro - Ultimate 3D Ecosystem</title>
+    <title>mapXing Titan Pro - Sistem Navigasi Ekosistem 3D</title>
     
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -13,525 +13,563 @@
 
     <style>
         :root { 
-            --accent: #007AFF; --success: #34C759; --danger: #FF3B30; --warning: #FF9500;
-            --bg: #000; --card: rgba(20, 20, 20, 0.98); --text: #fff;
-            --glass: rgba(255, 255, 255, 0.1);
+            --aksen-utama: #007AFF; 
+            --status-sukses: #34C759; 
+            --status-bahaya: #FF3B30; 
+            --status-peringatan: #FF9500;
+            --latar-belakang: #000000; 
+            --kartu-ui: rgba(25, 25, 25, 0.98); 
+            --teks-utama: #ffffff;
+            --efek-kaca: rgba(255, 255, 255, 0.08);
+            --bayangan: 0 15px 35px rgba(0,0,0,0.5);
         }
-        .light-mode { --bg: #f2f2f7; --card: rgba(255, 255, 255, 0.95); --text: #000; --glass: rgba(0, 0, 0, 0.05); }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'SF Pro Display', -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s background; }
+        .tema-terang { 
+            --latar-belakang: #f2f2f7; 
+            --kartu-ui: rgba(255, 255, 255, 0.95); 
+            --teks-utama: #1c1c1e; 
+            --efek-kaca: rgba(0, 0, 0, 0.05); 
+        }
 
-        /* --- PREMIUM BOOTING --- */
-        #boot-screen {
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'SF Pro Display', -apple-system, sans-serif; 
+            background: var(--latar-belakang); color: var(--teks-utama); 
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        /* --- SISTEM BOOTING PREMIUM --- */
+        #layar-boot {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 1s ease-in-out;
         }
-        .loading-ring {
-            width: 160px; height: 160px; border: 3px solid rgba(255,255,255,0.05);
-            border-top: 3px solid var(--accent); border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .cincin-pemuatan {
+            width: 180px; height: 180px; border: 4px solid rgba(255,255,255,0.03);
+            border-top: 4px solid var(--aksen-utama); border-radius: 50%;
+            animation: putar 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #boot-screen img { position: absolute; width: 100px; border-radius: 28px; filter: drop-shadow(0 0 20px rgba(0,122,255,0.4)); }
-
-        /* --- LAYERS --- */
-        #map { position: absolute; inset: 0; display: none; }
-        #gps-lock {
-            position: fixed; inset: 0; background: var(--bg); z-index: 9995;
-            display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center;
+        @keyframes putar { to { transform: rotate(360deg); } }
+        #layar-boot img { 
+            position: absolute; width: 110px; border-radius: 30px; 
+            filter: drop-shadow(0 0 25px rgba(0,122,255,0.5)); 
         }
 
-        /* --- DYNAMIC ISLAND (NAV INFO) --- */
-        #island {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 36px; background: #000; border-radius: 20px;
-            z-index: 2000; display: none; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            border: 1.5px solid #333; overflow: hidden;
-        }
-        #island.active { width: 92%; height: 110px; border-radius: 35px; border-color: var(--accent); }
-        .isl-content { opacity: 0; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 20px 30px; box-sizing: border-box; transition: 0.3s; }
-        #island.active .isl-content { opacity: 1; }
-
-        /* --- AUTH & UI PANELS --- */
-        #auth-screen {
-            position: fixed; inset: 0; z-index: 9999; display: none; background: #000;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        .auth-box { width: 85%; max-width: 400px; background: var(--card); padding: 45px 30px; border-radius: 40px; border: 1px solid var(--glass); }
+        /* --- ANTARMUKA PETA --- */
+        #peta-inti { position: absolute; inset: 0; display: none; }
         
-        #header-profile {
-            position: absolute; top: 75px; left: 15px; z-index: 900;
-            display: none; align-items: center; background: var(--card);
-            padding: 10px 20px; border-radius: 50px; border: 1px solid var(--glass);
+        #blokir-gps {
+            position: fixed; inset: 0; background: var(--latar-belakang); z-index: 9998;
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 40px; text-align: center;
         }
 
-        .ui-panel {
-            position: absolute; bottom: 25px; left: 15px; right: 15px;
-            background: var(--card); backdrop-filter: blur(40px);
-            border-radius: 35px; padding: 30px; z-index: 1000;
-            border: 1px solid var(--glass); transition: 0.6s transform cubic-bezier(0.23, 1, 0.32, 1);
+        /* --- DYNAMIC ISLAND (NAVIGASI) --- */
+        #pulau-dinamis {
+            position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+            width: 160px; height: 38px; background: #000; border-radius: 22px;
+            z-index: 5000; display: none; transition: 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            border: 1.5px solid #2c2c2e; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
-        .ui-panel.hide { transform: translateY(130%); }
+        #pulau-dinamis.aktif { width: 94%; height: 120px; border-radius: 38px; border-color: var(--aksen-utama); }
+        .konten-pulau { 
+            opacity: 0; width: 100%; display: flex; align-items: center; 
+            justify-content: space-between; padding: 25px 35px; box-sizing: border-box; 
+            transition: opacity 0.4s ease;
+        }
+        #pulau-dinamis.aktif .konten-pulau { opacity: 1; }
 
-        /* --- VEHICLE MARKER --- */
-        .v-container { position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .v-glow { position: absolute; width: 45px; height: 45px; background: var(--accent); border-radius: 50%; filter: blur(15px); opacity: 0.5; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.3); opacity: 0.1; } }
-        .vehicle-img { width: 50px; height: 50px; z-index: 2; transform: rotate(-90deg); }
+        /* --- PANEL KONTROL UI --- */
+        .panel-ui {
+            position: absolute; bottom: 28px; left: 18px; right: 18px;
+            background: var(--kartu-ui); backdrop-filter: blur(45px); -webkit-backdrop-filter: blur(45px);
+            border-radius: 38px; padding: 32px; z-index: 4000;
+            border: 1px solid var(--efek-kaca); box-shadow: var(--bayangan);
+            transition: 0.7s transform cubic-bezier(0.2, 0.9, 0.3, 1.1);
+        }
+        .panel-ui.sembunyi { transform: translateY(140%); }
 
-        /* --- INPUTS & BUTTONS --- */
+        #kontrol-samping {
+            position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+            display: none; flex-direction: column; gap: 15px; z-index: 4500;
+        }
+        .tombol-lingkar { 
+            width: 58px; height: 58px; border-radius: 50%; 
+            background: var(--kartu-ui); border: 1px solid var(--efek-kaca); 
+            font-size: 26px; cursor: pointer; color: var(--teks-utama); 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: 0.3s;
+        }
+        .tombol-lingkar:active { transform: scale(0.85); }
+
+        /* --- ASET KENDARAAN 3D --- */
+        .wadah-kendaraan { position: relative; width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; }
+        .cahaya-bawah { 
+            position: absolute; width: 50px; height: 50px; 
+            background: var(--aksen-utama); border-radius: 50%; 
+            filter: blur(18px); opacity: 0.5; animation: denyut 1.8s infinite ease-in-out; 
+        }
+        @keyframes denyut { 
+            0%, 100% { transform: scale(0.8); opacity: 0.4; } 
+            50% { transform: scale(1.4); opacity: 0.15; } 
+        }
+        .img-kendaraan { 
+            width: 55px; height: 55px; z-index: 10; 
+            transform: rotate(-90deg); filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)); 
+        }
+
+        /* --- MODAL SISTEM --- */
+        .modal-titan {
+            position: fixed; top: -110%; left: 50%; transform: translateX(-50%);
+            width: 88%; max-width: 380px; background: var(--kartu-ui);
+            backdrop-filter: blur(35px); border-radius: 30px; z-index: 12000;
+            padding: 30px; transition: 0.7s cubic-bezier(0.17, 0.89, 0.32, 1.25);
+            border: 1px solid var(--efek-kaca); box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .modal-titan.tampil { top: 35px; }
+
+        /* --- FORMULIR & TOMBOL --- */
         input { 
-            width: 100%; box-sizing: border-box; background: var(--glass); 
-            border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 20px; 
-            color: var(--text); margin-bottom: 12px; font-size: 16px; outline: none;
+            width: 100%; box-sizing: border-box; background: var(--efek-kaca); 
+            border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; 
+            color: var(--teks-utama); margin-bottom: 15px; font-size: 16px; outline: none;
+            transition: 0.3s border-color;
         }
-        .btn { padding: 18px; border-radius: 22px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .blue { background: var(--accent); color: white; box-shadow: 0 10px 20px rgba(0,122,255,0.3); }
-        .green { background: var(--success); color: white; }
-        .red { background: var(--danger); color: white; }
-        .btn:active { transform: scale(0.95); }
+        input:focus { border-color: var(--aksen-utama); }
+        
+        .btn-utama { 
+            padding: 20px; border-radius: 24px; border: none; font-weight: 700; 
+            cursor: pointer; transition: 0.3s; font-size: 16px; 
+            display: flex; align-items: center; justify-content: center; gap: 10px; 
+        }
+        .biru { background: var(--aksen-utama); color: #fff; box-shadow: 0 12px 24px rgba(0,122,255,0.35); }
+        .hijau { background: var(--status-sukses); color: #fff; }
+        .merah { background: var(--status-bahaya); color: #fff; }
+        .btn-utama:active { transform: scale(0.94); }
 
-        /* --- SIDE CONTROLS --- */
-        #side-ctrl {
-            position: absolute; right: 15px; top: 45%; transform: translateY(-50%);
-            display: none; flex-direction: column; gap: 12px; z-index: 1500;
+        #btn-pusat {
+            position: absolute; right: 18px; bottom: 330px; z-index: 4500;
+            width: 60px; height: 60px; border-radius: 50%; background: var(--aksen-utama);
+            border: none; color: white; display: none; font-size: 24px; box-shadow: var(--bayangan);
         }
-        .circle-btn { width: 55px; height: 55px; border-radius: 50%; background: var(--card); border: 1px solid var(--glass); font-size: 24px; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-
-        #recenter-btn {
-            position: absolute; right: 15px; bottom: 320px; z-index: 1500;
-            width: 55px; height: 55px; border-radius: 50%; background: var(--accent);
-            border: none; color: white; display: none; font-size: 22px;
-        }
-
-        /* --- MODAL SYSTEM --- */
-        .mx-modal {
-            position: fixed; top: -100%; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 350px; background: var(--card);
-            backdrop-filter: blur(30px); border-radius: 25px; z-index: 11000;
-            padding: 25px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            border: 1px solid var(--glass); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-        .mx-modal.show { top: 30px; }
     </style>
 </head>
-<body>
+<body class="tema-gelap">
 
-<div id="boot-screen">
-    <div class="loading-ring"></div>
-    <img src="https://i.ibb.co.com/PG4vKZJr/file-000000002cd871fa905a8a3df61564b4.png" alt="mapXing">
+<div id="layar-boot">
+    <div class="cincin-pemuatan"></div>
+    <img src="https://i.ibb.co.com/PG4vKZJr/file-000000002cd871fa905a8a3df61564b4.png" alt="Logo mapXing">
 </div>
 
-<div id="gps-lock">
-    <h1 style="font-size: 60px; margin: 0;">🛰️</h1>
-    <h2>Otoritas GPS Diperlukan</h2>
-    <p style="opacity: 0.6; margin-bottom: 30px;">mapXing butuh akses lokasi real-time agar navigasi 3D dan garis rute biru tidak eror.</p>
-    <button class="btn blue" style="width:100%" onclick="requestGPS()">Aktifkan Sekarang</button>
+<div id="blokir-gps">
+    <h1 style="font-size: 65px; margin: 0;">📡</h1>
+    <h2 style="margin-top: 20px;">Otoritas Lokasi Diperlukan</h2>
+    <p style="opacity: 0.6; margin-bottom: 35px; line-height: 1.5;">Sistem Titan memerlukan akses GPS presisi tinggi untuk memproses rute 3D dan sinkronisasi jalur navigasi Anda.</p>
+    <button class="btn-utama biru" style="width:100%" onclick="aktivasiGPS()">Berikan Otoritas</button>
 </div>
 
-<div id="auth-screen">
-    <div class="auth-box">
-        <h2 style="margin-bottom: 5px;">SkyMail Portal</h2>
-        <p style="font-size: 12px; opacity: 0.5; margin-bottom: 30px;">Sinkronisasi Ekosistem mapXing Titan</p>
-        <input type="text" id="u-user" placeholder="Username (ex: fufui)">
-        <input type="password" id="u-pass" placeholder="Password">
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button class="btn blue" style="flex:1" onclick="handleAuth('login')">Masuk</button>
-            <button class="btn green" style="flex:1" onclick="handleAuth('signup')">Daftar</button>
-        </div>
+<div id="modal-titan" class="modal-titan">
+    <h3 id="judul-modal" style="margin-top:0">Log Sistem</h3>
+    <p id="pesan-modal" style="font-size: 15px; opacity: 0.8; margin-bottom: 25px; line-height: 1.4;"></p>
+    <div id="aksi-modal" style="display: flex; gap: 12px;">
+        <button class="btn-utama biru" id="modal-batal" style="flex:1" onclick="tutupModal()">Tutup</button>
+        <button class="btn-utama merah" id="modal-konfirmasi" style="flex:1; display:none;" onclick="keluarSistem()">Ya, Keluar</button>
     </div>
 </div>
 
-<div id="mx-modal" class="mx-modal">
-    <h3 id="modal-title" style="margin-top:0">Notifikasi</h3>
-    <p id="modal-msg" style="font-size: 14px; opacity: 0.8; margin-bottom: 20px;"></p>
-    <div id="modal-actions" style="display: flex; gap: 10px;">
-        <button class="btn blue" id="modal-primary" style="flex:1" onclick="closeModal()">Oke</button>
-        <button class="btn red" id="modal-secondary" style="flex:1; display:none;" onclick="confirmExit()">Keluar</button>
-    </div>
-</div>
-
-<div id="header-profile">
-    <div id="avatar" style="width:40px; height:40px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white;">?</div>
-    <div style="margin-left:12px;"><b id="display-name">Guest@sky.mail</b></div>
-    <button onclick="logout()" style="background:none; border:none; color:var(--danger); margin-left:15px; font-size:22px;">✕</button>
-</div>
-
-<div id="island">
-    <div class="isl-content">
+<div id="pulau-dinamis">
+    <div class="konten-pulau">
         <div>
-            <span id="isl-time" style="font-size:32px; font-weight:900; color:var(--success);">--</span><br>
-            <span id="isl-dist" style="font-size:14px; opacity:0.6;">0.0 KM</span>
+            <span id="waktu-pulau" style="font-size:34px; font-weight:900; color:var(--status-sukses);">--</span><br>
+            <span id="jarak-pulau" style="font-size:15px; opacity:0.6;">0.0 KILOMETER</span>
         </div>
-        <div id="isl-icon" style="font-size: 45px;">🚗</div>
+        <div id="ikon-pulau" style="font-size: 48px;">🚗</div>
     </div>
 </div>
 
-<div id="map"></div>
-<button id="recenter-btn" onclick="reCenter()">🎯</button>
+<div id="peta-inti"></div>
+<button id="btn-pusat" onclick="tengahkanKamera()">🎯</button>
 
-<div id="side-ctrl">
-    <button class="circle-btn" onclick="toggleTheme()">🌓</button>
-    <button class="circle-btn" onclick="findPOI('gas_station')">⛽</button>
-    <button class="circle-btn" onclick="findPOI('cafe')">☕</button>
+<div id="kontrol-samping">
+    <button class="tombol-lingkar" onclick="gantiTemaPeta()">🌓</button>
+    <button class="tombol-lingkar" onclick="cariFasilitas('gas_station')">⛽</button>
+    <button class="tombol-lingkar" onclick="cariFasilitas('cafe')">☕</button>
 </div>
 
-<div id="panel-search" class="ui-panel hide">
-    <input type="text" id="in-end" placeholder="🏁 Ke mana kita hari ini?">
-    <div style="display: flex; gap: 10px;">
-        <button class="btn blue" style="flex:1" onclick="prepareRoute('driving')">🚗 Mobil</button>
-        <button class="btn blue" style="flex:1" onclick="prepareRoute('motorcycle')">🏍️ Motor</button>
+<div id="panel-pencarian" class="panel-ui sembunyi">
+    <input type="text" id="input-tujuan" placeholder="Cari destinasi atau alamat...">
+    <div style="display: flex; gap: 12px;">
+        <button class="btn-utama biru" style="flex:1" onclick="prosesRute('driving')">🚗 Mobil 3D</button>
+        <button class="btn-utama biru" style="flex:1" onclick="prosesRute('motorcycle')">🏍️ Motor 3D</button>
     </div>
 </div>
 
-<div id="panel-preview" class="ui-panel hide">
-    <h3 id="target-name" style="margin:0">Rute Optimal</h3>
-    <p id="route-meta" style="opacity:0.7;">Menghitung...</p>
-    <div style="display: flex; gap: 10px;">
-        <button class="btn green" style="flex:2" onclick="startNavigation()">Gas Navigasi</button>
-        <button class="btn red" style="flex:1" onclick="abortRoute()">Batal</button>
+<div id="panel-pratinjau" class="panel-ui sembunyi">
+    <h3 id="nama-destinasi" style="margin:0; font-size: 20px;">Destinasi Terdeteksi</h3>
+    <p id="info-rute" style="opacity:0.7; margin-bottom: 20px;">Menghitung jalur biru...</p>
+    <div style="display: flex; gap: 12px;">
+        <button class="btn-utama hijau" style="flex:2" onclick="mulaiNavigasiAktif()">Mulai Navigasi</button>
+        <button class="btn-utama merah" style="flex:1" onclick="batalkanSesi()">Batal</button>
     </div>
 </div>
 
-<div id="panel-live" class="ui-panel hide">
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-        <div id="nav-arrow" style="font-size: 35px;">⬆️</div>
-        <b id="nav-instr" style="font-size: 18px;">Ikuti jalur biru di peta</b>
+<div id="panel-navigasi" class="panel-ui sembunyi">
+    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+        <div id="panah-nav" style="font-size: 40px;">⬆️</div>
+        <div>
+            <b id="teks-nav" style="font-size: 18px;">Tetap di jalur utama</b><br>
+            <span style="font-size: 13px; opacity: 0.5;">Ikuti garis biru pada peta 3D</span>
+        </div>
     </div>
-    <button class="btn red" style="width:100%" onclick="tryFinishJourney()">Selesaikan Perjalanan</button>
+    <button class="btn-utama merah" style="width:100%" onclick="cekProgresKeluar()">Selesaikan Perjalanan</button>
 </div>
 
 <script>
-    // --- DATABASE CONFIG ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
-        authDomain: "xbook-global26.firebaseapp.com",
-        databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "xbook-global26",
-        storageBucket: "xbook-global26.firebasestorage.app",
-        messagingSenderId: "384795261277",
-        appId: "1:384795261277:web:6a2b05dbea819b4f4590b4"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    // Konfigurasi Database & API
+    const API_KEY_MAP = 'Tfz4m6PaapeDYSxvNHUy';
+    let peta, koordinatUser, penandaKendaraan, navigasiBerjalan = false;
+    let ruteSaatIni = null, jarakAwal = 0, modeTransportasi = 'driving';
 
-    const API_KEY = 'Tfz4m6PaapeDYSxvNHUy';
-    let map, userPos, vehicle, isLive = false, currentRoute = null;
-    let initialDistance = 0, transportType = 'driving';
-
-    // --- INITIALIZATION ---
-    window.onload = () => {
+    // Inisialisasi Booting
+    window.onload = function() {
         setTimeout(() => {
-            document.getElementById('boot-screen').style.opacity = '0';
+            const layarBoot = document.getElementById('layar-boot');
+            layarBoot.style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('boot-screen').remove();
-                checkUserSession();
-            }, 800);
+                layarBoot.remove();
+                document.getElementById('blokir-gps').style.display = 'flex';
+            }, 1000);
         }, 3000);
     };
 
-    function showModal(title, msg, dualBtn = false) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-msg').innerText = msg;
-        document.getElementById('modal-secondary').style.display = dualBtn ? 'block' : 'none';
-        document.getElementById('modal-primary').innerText = dualBtn ? 'Tetap Jalan' : 'Oke';
-        document.getElementById('mx-modal').classList.add('show');
+    function tampilkanModal(judul, pesan, konfirmasi = false) {
+        document.getElementById('judul-modal').innerText = judul;
+        document.getElementById('pesan-modal').innerText = pesan;
+        document.getElementById('modal-konfirmasi').style.display = konfirmasi ? 'block' : 'none';
+        document.getElementById('modal-batal').innerText = konfirmasi ? 'Tetap Navigasi' : 'Mengerti';
+        document.getElementById('modal-titan').classList.add('tampil');
     }
-    function closeModal() { document.getElementById('mx-modal').classList.remove('show'); }
 
-    // --- AUTH LOGIC ---
-    function checkUserSession() {
-        const user = localStorage.getItem('map_session');
-        if(user) {
-            document.getElementById('display-name').innerText = user + "@sky.mail";
-            document.getElementById('avatar').innerText = user[0].toUpperCase();
-            document.getElementById('gps-lock').style.display = 'flex';
+    function tutupModal() { document.getElementById('modal-titan').classList.remove('tampil'); }
+
+    // Prosedur GPS & Lokasi
+    function aktivasiGPS() {
+        if (!navigator.geolocation) return tampilkanModal("Kesalahan", "Browser Anda tidak mendukung GPS.");
+
+        navigator.geolocation.watchPosition(posisi => {
+            koordinatUser = [posisi.coords.longitude, posisi.coords.latitude];
+            document.getElementById('blokir-gps').style.display = 'none';
+            
+            if (!peta) inisialisasiPetaUtama();
+            perbaruiKendaraan(posisi.coords.heading || 0);
+
+            if (navigasiBerjalan) {
+                peta.flyTo({
+                    center: koordinatUser,
+                    bearing: posisi.coords.heading || 0,
+                    zoom: 19.5,
+                    pitch: 85,
+                    duration: 1500
+                });
+                sinkronisasiLogikaNavigasi();
+            }
+        }, err => tampilkanModal("Akses Ditolak", "Mohon izinkan akses GPS pada pengaturan perangkat Anda."), {
+            enableHighAccuracy: true
+        });
+    }
+
+    // Prosedur Peta 3D
+    function inisialisasiPetaUtama() {
+        document.getElementById('peta-inti').style.display = 'block';
+        document.getElementById('panel-pencarian').classList.remove('sembunyi');
+        document.getElementById('pulau-dinamis').style.display = 'block';
+        document.getElementById('kontrol-samping').style.display = 'flex';
+
+        peta = new maplibregl.Map({
+            container: 'peta-inti',
+            style: `https://api.maptiler.com/maps/dark-v10/style.json?key=${API_KEY_MAP}`,
+            center: koordinatUser,
+            zoom: 16.5,
+            pitch: 65,
+            antialias: true
+        });
+
+        peta.on('load', () => renderGedung3D());
+    }
+
+    function renderGedung3D() {
+        if (peta.getLayer('lapisan-3d')) return;
+        peta.addLayer({
+            'id': 'lapisan-3d',
+            'source': 'openmaptiles',
+            'source-layer': 'building',
+            'type': 'fill-extrusion',
+            'minzoom': 15,
+            'paint': {
+                'fill-extrusion-color': document.body.classList.contains('tema-terang') ? '#d1d1d6' : '#2c2c2e',
+                'fill-extrusion-height': ['get', 'render_height'],
+                'fill-extrusion-base': ['get', 'render_min_height'],
+                'fill-extrusion-opacity': 0.85
+            }
+        });
+    }
+
+    function perbaruiKendaraan(arah) {
+        if (!penandaKendaraan) {
+            const wadah = document.createElement('div');
+            wadah.className = 'wadah-kendaraan';
+            const ikonUrl = modeTransportasi === 'motorcycle' 
+                ? 'https://cdn-icons-png.flaticon.com/512/171/171238.png' 
+                : 'https://cdn-icons-png.flaticon.com/512/3082/3082349.png';
+            
+            wadah.innerHTML = `<div class="cahaya-bawah"></div><img class="img-kendaraan" src="${ikonUrl}">`;
+            penandaKendaraan = new maplibregl.Marker({
+                element: wadah,
+                rotationAlignment: 'map'
+            }).setLngLat(koordinatUser).addTo(peta);
         } else {
-            document.getElementById('auth-screen').style.display = 'flex';
+            penandaKendaraan.setLngLat(koordinatUser);
+            penandaKendaraan.setRotation(arah - 90);
         }
     }
 
-    async function handleAuth(mode) {
-        const u = document.getElementById('u-user').value.trim().toLowerCase();
-        const p = document.getElementById('u-pass').value;
-        if(!u || p.length < 4) return showModal("Input Lemah", "User/Pass min 4 karakter.");
+    // Prosedur Rute
+    async function prosesRute(mode) {
+        modeTransportasi = mode;
+        const tujuanRaw = document.getElementById('input-tujuan').value;
+        if (!tujuanRaw) return tampilkanModal("Input Kosong", "Harap masukkan nama lokasi tujuan.");
 
-        const ref = db.ref('users/' + u);
-        const snap = await ref.once('value');
+        try {
+            const responGeo = await fetch(`https://api.maptiler.com/geocoding/${tujuanRaw}.json?key=${API_KEY_MAP}&proximity=${koordinatUser[0]},${koordinatUser[1]}`);
+            const dataGeo = await responGeo.json();
+            
+            if (!dataGeo.features.length) throw new Error("Lokasi tidak ditemukan.");
 
-        if(mode === 'signup') {
-            if(snap.exists()) return showModal("Eror", "Username sudah ada!");
-            await ref.set({ pass: p, mail: u + '@sky.mail' });
-            showModal("Sukses", "Silakan login.");
+            const targetPos = dataGeo.features[0].center;
+            const urlRute = `https://router.project-osrm.org/route/v1/${mode}/${koordinatUser[0]},${koordinatUser[1]};${targetPos[0]},${targetPos[1]}?overview=full&geometries=geojson&steps=true`;
+            
+            const responRute = await fetch(urlRute);
+            const dataRute = await responRute.json();
+            
+            ruteSaatIni = dataRute.routes[0];
+            jarakAwal = ruteSaatIni.distance;
+
+            gambarGarisBiru(ruteSaatIni.geometry);
+
+            document.getElementById('nama-destinasi').innerText = dataGeo.features[0].text;
+            document.getElementById('info-rute').innerText = `${Math.round(ruteSaatIni.duration/60)} Menit • ${(ruteSaatIni.distance/1000).toFixed(2)} KM`;
+            
+            document.getElementById('panel-pencarian').classList.add('sembunyi');
+            document.getElementById('panel-pratinjau').classList.remove('sembunyi');
+        } catch (e) {
+            tampilkanModal("Gagal Navigasi", "Sistem gagal menghasilkan rute. Silakan coba lokasi lain.");
+        }
+    }
+
+    function gambarGarisBiru(geometry) {
+        if (peta.getLayer('garis-nav')) {
+            peta.removeLayer('garis-nav');
+            peta.removeSource('garis-nav');
+        }
+
+        peta.addSource('garis-nav', {
+            'type': 'geojson',
+            'data': { 'type': 'Feature', 'geometry': geometry }
+        });
+
+        peta.addLayer({
+            'id': 'garis-nav',
+            'type': 'line',
+            'source': 'garis-nav',
+            'layout': { 'line-join': 'round', 'line-cap': 'round' },
+            'paint': {
+                'line-color': '#007AFF',
+                'line-width': 10,
+                'line-offset': 1
+            }
+        });
+
+        const batas = new maplibregl.LngLatBounds();
+        geometry.coordinates.forEach(c => batas.extend(c));
+        peta.fitBounds(batas, { padding: 100, speed: 1.5 });
+    }
+
+    // Prosedur Navigasi Aktif
+    function mulaiNavigasiAktif() {
+        navigasiBerjalan = true;
+        document.getElementById('pulau-dinamis').classList.add('aktif');
+        document.getElementById('panel-pratinjau').classList.add('sembunyi');
+        document.getElementById('panel-navigasi').classList.remove('sembunyi');
+        document.getElementById('btn-pusat').style.display = 'block';
+
+        const imgKendaraan = penandaKendaraan.getElement().querySelector('.img-kendaraan');
+        imgKendaraan.src = modeTransportasi === 'motorcycle' 
+            ? 'https://cdn-icons-png.flaticon.com/512/171/171238.png' 
+            : 'https://cdn-icons-png.flaticon.com/512/3082/3082349.png';
+
+        peta.flyTo({ center: koordinatUser, zoom: 19.5, pitch: 85, duration: 2500 });
+    }
+
+    function sinkronisasiLogikaNavigasi() {
+        if (!navigasiBerjalan || !ruteSaatIni) return;
+
+        const titikAkhir = ruteSaatIni.geometry.coordinates.slice(-1)[0];
+        const jarakSisa = turf.distance(turf.point(koordinatUser), turf.point(titikAkhir), {units: 'meters'});
+
+        document.getElementById('waktu-pulau').innerText = Math.max(1, Math.round(jarakSisa/350)) + "m";
+        document.getElementById('jarak-pulau').innerText = (jarakSisa/1000).toFixed(1) + " KILOMETER";
+
+        if (jarakSisa < 40) {
+            navigasiBerjalan = false;
+            tampilkanModal("Selamat", "Anda telah tiba di tujuan yang ditentukan.");
+            setTimeout(keluarSistem, 4000);
+        }
+    }
+
+    function cekProgresKeluar() {
+        const titikAkhir = ruteSaatIni.geometry.coordinates.slice(-1)[0];
+        const jarakSisa = turf.distance(turf.point(koordinatUser), turf.point(titikAkhir), {units: 'meters'});
+        const progresPerjalanan = (1 - (jarakSisa / jarakAwal)) * 100;
+
+        if (progresPerjalanan < 50) {
+            tampilkanModal("Peringatan Sesi", `Perjalanan Anda baru mencapai ${progresPerjalanan.toFixed(0)}%. Navigasi belum selesai sepenuhnya. Apakah Anda yakin ingin menghentikan sesi ini?`, true);
         } else {
-            if(!snap.exists() || snap.val().pass !== p) return showModal("Gagal", "Cek kredensial!");
-            localStorage.setItem('map_session', u);
+            keluarSistem();
+        }
+    }
+
+    // Fungsi Utilitas Sistem
+    function gantiTemaPeta() {
+        document.body.classList.toggle('tema-terang');
+        const gayaBaru = document.body.classList.contains('tema-terang') ? 'streets-v2' : 'dark-v10';
+        
+        // Memperbarui gaya peta secara halus
+        peta.setStyle(`https://api.maptiler.com/maps/${gayaBaru}/style.json?key=${API_KEY_MAP}`);
+        
+        // Menunggu data gaya dimuat ulang sebelum merender kembali gedung 3D
+        peta.once('styledata', () => {
+            renderGedung3D();
+            console.log("Sistem Log: Tema peta berhasil diperbarui ke " + gayaBaru);
+        });
+    }
+
+    /**
+     * Fungsi Pencarian Fasilitas Umum (POI)
+     * Menggunakan API Geocoding untuk menemukan lokasi terdekat
+     */
+    async function cariFasilitas(tipe) {
+        if (!koordinatUser) return tampilkanModal("Sistem Sibuk", "Koordinat GPS belum terkunci.");
+        
+        const deskripsi = {
+            'gas_station': 'Stasiun Pengisian Bahan Bakar',
+            'cafe': 'Tempat Peristirahatan/Kafe'
+        };
+
+        const query = tipe === 'gas_station' ? 'SPBU' : 'Kafe';
+        
+        try {
+            const respon = await fetch(`https://api.maptiler.com/geocoding/${query}.json?key=${API_KEY_MAP}&proximity=${koordinatUser[0]},${koordinatUser[1]}`);
+            const data = await respon.json();
+            
+            if (data.features && data.features.length > 0) {
+                const lokasiTerdekat = data.features[0];
+                document.getElementById('input-tujuan').value = lokasiTerdekat.text;
+                tampilkanModal("Fasilitas Terdeteksi", `${deskripsi[tipe]} ditemukan: ${lokasiTerdekat.text}. Lokasi telah disalin ke kolom tujuan.`);
+            } else {
+                tampilkanModal("Informasi", "Tidak ada fasilitas terdekat yang ditemukan dalam radius sistem.");
+            }
+        } catch (error) {
+            console.error("Gagal melakukan pencarian POI:", error);
+        }
+    }
+
+    /**
+     * Prosedur Kamera
+     * Menstabilkan pandangan pengguna ke posisi kendaraan
+     */
+    function tengahkanKamera() {
+        if (!koordinatUser) return;
+        
+        peta.flyTo({
+            center: koordinatUser,
+            zoom: 19.5,
+            pitch: 85,
+            bearing: penandaKendaraan ? (penandaKendaraan.getRotation() + 90) : 0,
+            speed: 1.2,
+            curve: 1.4,
+            essential: true
+        });
+    }
+
+    /**
+     * Sistem Validasi Jarak Awal
+     * Mencegah navigasi jika pengguna terlalu jauh dari titik awal rute
+     */
+    function validasiJarakRute(posisiTujuan) {
+        const dari = turf.point(koordinatUser);
+        const ke = turf.point(posisiTujuan);
+        const opsi = { units: 'kilometers' };
+        const jarak = turf.distance(dari, ke, opsi);
+
+        if (jarak > 100) {
+            tampilkanModal("Peringatan Rute", `Destinasi berjarak ${jarak.toFixed(1)} km. Pastikan bahan bakar dan kondisi kendaraan optimal.`, false);
+        }
+    }
+
+    /**
+     * Sistem Loop Pembaruan Frame
+     * Memastikan pergerakan kamera tetap presisi dan halus pada mode 3D
+     */
+    function siklusPembaruanPeta() {
+        if (navigasiBerjalan && koordinatUser && peta) {
+            // Logika tambahan untuk penyesuaian sudut pandang dinamis
+            const pitchSaatIni = peta.getPitch();
+            if (pitchSaatIni < 85) {
+                peta.setPitch(pitchSaatIni + 0.02);
+            }
+        }
+        requestAnimationFrame(siklusPembaruanPeta);
+    }
+
+    // Menginisialisasi siklus pembaruan frame
+    requestAnimationFrame(siklusPembaruanPeta);
+
+    /**
+     * Prosedur Terminasi Sesi
+     * Membersihkan seluruh data sesi dan merestart aplikasi
+     */
+    function batalkanSesi() {
+        if (navigasiBerjalan) {
+            tampilkanModal("Konfirmasi Pembatalan", "Apakah Anda benar-benar ingin membatalkan navigasi aktif?", true);
+        } else {
             location.reload();
         }
     }
 
-    function logout() { localStorage.clear(); location.reload(); }
-
-    // --- GPS ENGINE ---
-    function requestGPS() {
-        navigator.geolocation.getCurrentPosition(pos => {
-            userPos = [pos.coords.longitude, pos.coords.latitude];
-            document.getElementById('gps-lock').style.display = 'none';
-            initMapEngine();
-            trackUser();
-        }, () => showModal("GPS Error", "Izinkan lokasi di browser!"), { enableHighAccuracy: true });
-    }
-
-    function trackUser() {
-        navigator.geolocation.watchPosition(pos => {
-            userPos = [pos.coords.longitude, pos.coords.latitude];
-            const heading = pos.coords.heading || 0;
-            
-            if(!vehicle) {
-                const el = document.createElement('div');
-                el.className = 'v-container';
-                const icon = transportType === 'motorcycle' ? 'https://cdn-icons-png.flaticon.com/512/171/171238.png' : 'https://cdn-icons-png.flaticon.com/512/3082/3082349.png';
-                el.innerHTML = `<div class="v-glow"></div><img class="vehicle-img" src="${icon}">`;
-                vehicle = new maplibregl.Marker({ element: el, rotationAlignment: 'map' }).setLngLat(userPos).addTo(map);
-            } else {
-                vehicle.setLngLat(userPos);
-                vehicle.setRotation(heading - 90);
-            }
-
-            if(isLive) {
-                map.flyTo({ center: userPos, bearing: heading, pitch: 85, zoom: 19 });
-                updateNavProgress();
-            }
-        }, null, { enableHighAccuracy: true });
-    }
-
-    // --- MAP CORE ---
-    function initMapEngine() {
-        document.getElementById('map').style.display = 'block';
-        document.getElementById('panel-search').classList.remove('hide');
-        document.getElementById('header-profile').style.display = 'flex';
-        document.getElementById('island').style.display = 'flex';
-        document.getElementById('side-ctrl').style.display = 'flex';
-
-        map = new maplibregl.Map({
-            container: 'map',
-            style: `https://api.maptiler.com/maps/dark-v10/style.json?key=${API_KEY}`,
-            center: userPos, zoom: 16, pitch: 60, antialias: true
-        });
-
-        map.on('load', () => {
-            map.addLayer({
-                'id': '3d-buildings', 'source': 'openmaptiles', 'source-layer': 'building', 'type': 'fill-extrusion',
-                'minzoom': 15, 'paint': { 'fill-extrusion-color': '#333', 'fill-extrusion-height': ['get', 'render_height'], 'fill-extrusion-opacity': 0.6 }
-            });
-        });
-    }
-
-    // --- ROUTING SYSTEM ---
-    async function prepareRoute(mode) {
-        transportType = mode;
-        const dest = document.getElementById('in-end').value;
-        if(!dest) return showModal("Eror", "Tujuan kosong!");
-
-        const geo = await fetch(`https://api.maptiler.com/geocoding/${dest}.json?key=${API_KEY}&proximity=${userPos[0]},${userPos[1]}`);
-        const gData = await geo.json();
-        if(!gData.features.length) return showModal("Eror", "Lokasi tidak ditemukan.");
-
-        const target = gData.features[0].center;
-        const osrm = `https://router.project-osrm.org/route/v1/${mode}/${userPos[0]},${userPos[1]};${target[0]},${target[1]}?overview=full&geometries=geojson&steps=true`;
-        
-        try {
-            const rRes = await fetch(osrm);
-            const rData = await rRes.json();
-            if(rData.code !== 'Ok') throw new Error();
-
-            currentRoute = rData.routes[0];
-            initialDistance = currentRoute.distance;
-
-            drawRouteLine(currentRoute.geometry);
-            
-            document.getElementById('target-name').innerText = gData.features[0].text;
-            document.getElementById('route-meta').innerText = `${Math.round(currentRoute.duration/60)} Menit • ${(currentRoute.distance/1000).toFixed(1)} KM`;
-            
-            // Island Update
-            document.getElementById('isl-time').innerText = Math.round(currentRoute.duration/60) + "m";
-            document.getElementById('isl-dist').innerText = (currentRoute.distance/1000).toFixed(1) + " KM";
-            document.getElementById('isl-icon').innerText = mode === 'motorcycle' ? '🏍️' : '🚗';
-
-            document.getElementById('panel-search').classList.add('hide');
-            document.getElementById('panel-preview').classList.remove('hide');
-
-            if(currentRoute.distance > 50000) {
-                showModal("Peringatan Rute", "Rute sangat panjang (>50KM). Cari rute alternatif?", true);
-            }
-        } catch(e) { showModal("Eror", "Jalur tidak tersedia."); }
-    }
-
-    function drawRouteLine(geo) {
-        if(map.getLayer('path')) { map.removeLayer('path'); map.removeSource('path'); }
-        map.addSource('path', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': geo } });
-        map.addLayer({ 'id': 'path', 'type': 'line', 'source': 'path', 'paint': { 'line-color': '#007AFF', 'line-width': 10, 'line-cap': 'round' } });
-        
-        const bounds = new maplibregl.LngLatBounds();
-        geo.coordinates.forEach(c => bounds.extend(c));
-        map.fitBounds(bounds, { padding: 80 });
-    }
-
-    // --- NAVIGATION LIVE ---
-    function startNavigation() {
-        isLive = true;
-        document.getElementById('island').classList.add('active');
-        document.getElementById('panel-preview').classList.add('hide');
-        document.getElementById('panel-live').classList.remove('hide');
-        document.getElementById('recenter-btn').style.display = 'block';
-        
-        map.flyTo({ center: userPos, zoom: 19, pitch: 85, duration: 2500 });
-        updateNavProgress();
-    }
-
-    function updateNavProgress() {
-        if(!isLive || !currentRoute) return;
-        
-        // Simu-Instruction Logic
-        const distLeft = turf.distance(turf.point(userPos), turf.point(currentRoute.geometry.coordinates.slice(-1)[0]), {units: 'meters'});
-        document.getElementById('isl-dist').innerText = (distLeft/1000).toFixed(1) + " KM";
-        
-        if(distLeft < 50) {
-            document.getElementById('nav-instr').innerText = "Anda telah sampai!";
-            document.getElementById('nav-arrow').innerText = "🏁";
-        }
-    }
-
-    function tryFinishJourney() {
-        const distLeft = turf.distance(turf.point(userPos)            , turf.point(currentRoute.geometry.coordinates.slice(-1)[0]), {units: 'meters'});
-        
-        // Hitung progres berdasarkan jarak awal vs jarak tersisa
-        const progress = (1 - (distLeft / initialDistance)) * 100;
-        
-        // Update tampilan Dynamic Island secara real-time
-        document.getElementById('isl-dist').innerText = (distLeft / 1000).toFixed(1) + " KM";
-        
-        // Logika Instruksi Navigasi Sederhana
-        if (distLeft < 100) {
-            document.getElementById('nav-instr').innerText = "Tujuan ada di depan mata!";
-            document.getElementById('nav-arrow').innerText = "🏁";
-        } else if (distLeft < 500) {
-            document.getElementById('nav-instr').innerText = "Bersiap, tujuan sudah dekat";
-            document.getElementById('nav-arrow').innerText = "📍";
-        }
-
-        // Tampilkan pesan jika sampai
-        if (distLeft < 20) {
-            isLive = false;
-            showModal("Sampai!", "Anda telah tiba di lokasi tujuan dengan selamat.", false);
-        }
-    }
-
-    // --- SYSTEM EXIT & PROTECTION ---
-    function tryFinishJourney() {
-        if (!currentRoute) return confirmExit();
-        
-        const distLeft = turf.distance(turf.point(userPos), 
-            turf.point(currentRoute.geometry.coordinates.slice(-1)[0]), {units: 'meters'});
-        const progress = (1 - (distLeft / initialDistance)) * 100;
-
-        // Cek jika perjalanan belum 50%
-        if (progress < 50) {
-            showModal("Yakin Keluar?", `Baru jalan ${progress.toFixed(0)}%. Navigasi belum selesai, yakin mau berhenti sekarang?`, true);
-        } else {
-            confirmExit();
-        }
-    }
-
-    function confirmExit() {
+    function keluarSistem() {
+        // Membersihkan cache rute sebelum reload
+        ruteSaatIni = null;
+        navigasiBerjalan = false;
         location.reload();
     }
 
-    function abortRoute() {
-        location.reload();
-    }
+    /**
+     * Logika Error Handling Global
+     * Menangani kegagalan koneksi atau API selama sesi berlangsung
+     */
+    window.addEventListener('offline', () => {
+        tampilkanModal("Koneksi Terputus", "Sistem mendeteksi kehilangan sinyal internet. Peta mungkin tidak dimuat dengan sempurna.");
+    });
 
-    // --- MAP MANIPULATION ---
-    function reCenter() {
-        if (userPos) {
-            map.flyTo({
-                center: userPos,
-                zoom: 19,
-                pitch: 85,
-                bearing: vehicle ? (vehicle.getRotation() + 90) : 0,
-                essential: true
-            });
-        }
-    }
+    window.addEventListener('online', () => {
+        console.log("Sistem Log: Koneksi internet pulih.");
+    });
 
-    function toggleTheme() {
-        document.body.classList.toggle('light-mode');
-        const isLight = document.body.classList.contains('light-mode');
-        const newStyle = isLight ? 'streets-v2' : 'dark-v10';
-        
-        map.setStyle(`https://api.maptiler.com/maps/${newStyle}/style.json?key=${API_KEY}`);
-        
-        // Re-add 3D buildings after style change
-        map.once('styledata', () => {
-            map.addLayer({
-                'id': '3d-buildings',
-                'source': 'openmaptiles',
-                'source-layer': 'building',
-                'type': 'fill-extrusion',
-                'minzoom': 15,
-                'paint': {
-                    'fill-extrusion-color': isLight ? '#ccc' : '#333',
-                    'fill-extrusion-height': ['get', 'render_height'],
-                    'fill-extrusion-opacity': 0.6
-                }
-            });
-        });
-    }
-
-    // --- POI ENGINE ---
-    async function findPOI(type) {
-        const q = type === 'gas_station' ? 'SPBU' : 'Cafe';
-        try {
-            const res = await fetch(`https://api.maptiler.com/geocoding/${q}.json?key=${API_KEY}&proximity=${userPos[0]},${userPos[1]}`);
-            const data = await res.json();
-            if (data.features && data.features.length > 0) {
-                const poi = data.features[0];
-                showModal("Info Lokasi", `${q} terdekat: ${poi.text}. Masukkan ke tujuan?`);
-                document.getElementById('in-end').value = poi.text;
-                // Tutup modal otomatis setelah 3 detik
-                setTimeout(closeModal, 3000);
-            }
-        } catch (e) {
-            console.error("POI Error", e);
-        }
-    }
-
-    // --- DISTANCE WARNING SYSTEM ---
-    function checkDistanceToStart(sPos) {
-        const from = turf.point(userPos);
-        const to = turf.point(sPos);
-        const distance = turf.distance(from, to, {units: 'kilometers'});
-
-        if (distance > 5) {
-            showModal("Lokasi Terlalu Jauh", `Kamu berada ${distance.toFixed(1)}km dari titik awal rute. Tetap gunakan rute ini?`, true);
-            return false;
-        }
-        return true;
-    }
-
-    // Memastikan fitur 3D bekerja maksimal & Smooth
-    function forceMapUpdate() {
-        if (isLive && userPos && map) {
-            // Animasi kamera mengikuti pergerakan secara halus
-            const currentPitch = map.getPitch();
-            if (currentPitch < 80) map.setPitch(currentPitch + 0.05);
-        }
-        requestAnimationFrame(forceMapUpdate);
-    }
-
-    // Jalankan update loop
-    requestAnimationFrame(forceMapUpdate);
+    // Menutup modal dengan tombol Escape
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') tutupModal();
+    });
 
 </script>
 </body>
