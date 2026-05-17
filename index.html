@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky OS v1.0</title>
+    <title>Sky OS v1.3 - Premium Desktop</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
-            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body, html {
@@ -20,383 +20,548 @@
             background: #000;
         }
 
-        /* --- SCREEN ANIMASI BOOTING --- */
+        /* FILTER KECERAHAN GLOBAL */
+        #brightness-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            z-index: 999999;
+            transition: background 0.1s ease;
+        }
+
+        /* --- ANIMASI BOOTING PREMIUM --- */
         #boot-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0b0f19;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #070b12;
             z-index: 100000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: white;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
         .boot-logo {
-            font-size: 72px;
-            margin-bottom: 20px;
-            animation: pulse 2s infinite ease-in-out;
+            font-size: 85px;
+            filter: drop-shadow(0 0 25px #38bdf8);
+            animation: float 2.5s infinite ease-in-out;
         }
 
         .boot-title {
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            background: linear-gradient(45deg, #30cfd0, #330867);
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #38bdf8, #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .boot-version {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 40px;
+        .progress-bar-container {
+            width: 220px;
+            height: 5px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            margin-top: 40px;
+            overflow: hidden;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #38bdf8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #a855f7);
+            box-shadow: 0 0 12px #38bdf8;
+            animation: load 2.2s forwards cubic-bezier(0.1, 0.8, 0.2, 1);
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes load { to { width: 100%; } }
+
+        /* --- LOCK SCREEN (TANPA SANDI - SWIPE / KLIK TO ENTER) --- */
+        #lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964') no-repeat center center;
+            background-size: cover;
+            z-index: 99999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 20px;
+            color: white;
+            transition: transform 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        .lock-header { text-align: center; }
+        .lock-clock { font-size: 72px; font-weight: 200; text-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .lock-date { font-size: 18px; opacity: 0.9; text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+
+        .enter-btn-box {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(25px);
+            padding: 15px 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: pulseGlow 2s infinite;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0px rgba(56,189,248,0); } 50% { box-shadow: 0 0 20px rgba(56,189,248,0.4); transform: scale(1.02); } }
 
         /* --- MAIN SYSTEM DESKTOP --- */
         #os-container {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964') no-repeat center center;
             background-size: cover;
             position: relative;
-            opacity: 0;
-            transition: opacity 1s ease;
         }
 
         #desktop {
-            width: 100%;
-            height: calc(100% - 48px);
-            position: relative;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: 20px;
+            width: 100%; height: calc(100% - 48px);
+            position: relative; padding: 25px;
+            display: flex; flex-direction: column; flex-wrap: wrap;
+            align-content: flex-start; gap: 15px;
         }
 
-        /* Shortcuts */
+        /* Shortcuts Glassmorphism UI */
         .shortcut {
-            width: 85px;
-            height: 90px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background 0.2s, transform 0.1s;
-            color: white;
-            text-shadow: 0px 2px 4px rgba(0,0,0,0.6);
+            width: 85px; height: 95px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; cursor: pointer; border-radius: 12px;
+            transition: background 0.2s, transform 0.1s; color: white;
         }
+        .shortcut:hover { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(5px); }
+        .shortcut:active { transform: scale(0.92); }
+        .shortcut .icon-box {
+            width: 52px; height: 52px; background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin-bottom: 8px; box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .shortcut .label { font-size: 11px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
 
-        .shortcut:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
-        .shortcut:active { transform: scale(0.95); }
-        .shortcut .icon { font-size: 36px; margin-bottom: 6px; }
-        .shortcut .label { font-size: 12px; font-weight: 500; }
+        /* --- WIDGET AREA DESKTOP --- */
+        .widgets-zone {
+            position: absolute; right: 25px; top: 25px;
+            display: flex; flex-direction: column; gap: 15px;
+            width: 260px; pointer-events: none;
+        }
+        .widget {
+            background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            padding: 18px; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .widget-time { font-size: 34px; font-weight: 700; }
+        .widget-quote { font-size: 11px; opacity: 0.8; line-height: 1.4; font-style: italic; margin-top: 5px; }
+        
+        /* Widget Kalender */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 10px; margin-top: 8px; }
+        .cal-header { font-weight: bold; color: #38bdf8; }
+        .cal-day.active { background: #38bdf8; color: #090d16; border-radius: 4px; font-weight: bold; }
 
-        /* --- INTERFASE JENDELA MODERN --- */
+        /* --- WINDOW SYSTEM V1.3 --- */
         .window {
-            position: absolute;
-            width: 460px;
-            height: 340px;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            animation: winOpen 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+            position: absolute; width: 460px; height: 360px;
+            background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px); border-radius: 14px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25); border: 1px solid rgba(255, 255, 255, 0.4);
+            display: none; flex-direction: column; overflow: hidden;
+            animation: winOpen 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
         }
-
-        @keyframes winOpen { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes winOpen { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .window-header {
-            background: rgba(243, 244, 246, 0.6);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: move;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            background: rgba(243, 244, 246, 0.35); padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
-
         .window-title { font-size: 13px; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 8px; }
         .window-controls { display: flex; gap: 8px; }
-        
-        .win-btn {
-            width: 14px;
-            height: 14px;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 0;
-            position: relative;
-        }
+        .win-btn { width: 13px; height: 13px; border: none; border-radius: 50%; cursor: pointer; }
         .win-btn.close { background: #ff5f56; }
         .win-btn.minimize { background: #ffbd2e; }
-        .win-btn:hover::after {
-            content: '•'; font-size: 12px; color: rgba(0,0,0,0.5);
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
 
         .window-body { flex: 1; overflow: auto; color: #1f2937; position: relative; }
 
-        /* --- APLIKASI SETTINGS STYLE MODERN HP --- */
-        .settings-banner {
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-            padding: 30px 20px;
-            color: white;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .settings-banner::before {
-            content: ''; position: absolute; top: -50%; left: -20%; width: 100%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
-        }
-        .settings-banner .os-big-title { font-size: 32px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        .settings-banner .os-version-tag { background: rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; margin-top: 8px; font-weight: 500; }
-        
+        /* --- APPLICATIONS GENERAL STYLE --- */
+        /* Settings */
+        .settings-banner { background: linear-gradient(135deg, #0284c7, #7c3aed); padding: 25px 20px; color: white; text-align: center; }
+        .settings-banner .os-big-title { font-size: 28px; font-weight: 800; }
+        .settings-banner .os-version-tag { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 11px; margin-top: 5px; display: inline-block; }
         .settings-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .settings-item {
-            background: white; padding: 12px 16px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02);
-        }
-        .settings-item-left { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 14px; }
-        .settings-icon { font-size: 20px; }
-        .settings-value { color: #6b7280; font-size: 13px; }
+        .settings-group { background: white; border-radius: 12px; padding: 5px; border: 1px solid rgba(0,0,0,0.03); }
+        .settings-item { padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+        .settings-item:last-child { border-bottom: none; }
 
         /* Notepad & Browser */
-        textarea.notepad-text { width: 100%; height: 100%; border: none; padding: 15px; resize: none; outline: none; font-size: 14px; background: transparent; line-height: 1.5; }
-        .browser-input { width: calc(100% - 20px); padding: 8px 12px; margin: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; outline: none; font-size: 13px; }
-        .browser-frame { width: 100%; height: calc(100% - 55px); border: none; background: white; }
+        textarea.notepad-text { width: 100%; height: 100%; border: none; padding: 15px; resize: none; outline: none; font-size: 14px; background: transparent; }
+        .browser-bar { display: flex; padding: 8px; background: #f3f4f6; gap: 8px; border-bottom: 1px solid #e5e7eb; }
+        .browser-input { flex: 1; padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; font-size: 12px; }
+        .browser-frame { width: 100%; height: calc(100% - 43px); border: none; background: white; }
 
-        /* Kalkulator */
-        #calc-screen { width: 100%; height: 50px; text-align: right; padding: 10px; font-size: 22px; border: none; background: rgba(0,0,0,0.03); outline: none; font-weight: 600; }
+        /* --- TERMINAL / CMD APPLICATION --- */
+        .terminal-body { background: #0c1017; color: #39ff14; font-family: 'Courier New', Courier, monospace; padding: 12px; height: 100%; overflow: auto; }
+        .terminal-output { white-space: pre-wrap; font-size: 13px; line-height: 1.4; margin-bottom: 8px; }
+        .terminal-input-line { display: flex; align-items: center; gap: 6px; }
+        .terminal-prefix { color: #38bdf8; font-weight: bold; font-size: 13px; }
+        .cmd-field { background: transparent; border: none; color: #39ff14; flex: 1; outline: none; font-family: monospace; font-size: 13px; }
 
-        /* --- TASKBAR AREA --- */
-        #taskbar {
-            width: 100%; height: 48px; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            position: absolute; bottom: 0; left: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 9999;
-            border-top: 1px solid rgba(255,255,255,0.1);
+        /* --- SKY STORE (VIRTUAL APP MARKET) --- */
+        .store-grid { padding: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .store-card { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; }
+        .store-icon { font-size: 32px; margin-bottom: 8px; }
+        .store-name { font-size: 13px; font-weight: 600; }
+        .store-btn { margin-top: 10px; border: none; background: #38bdf8; color: white; padding: 6px 16px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; width: 100%; }
+        .store-btn.installed { background: #e5e7eb; color: #6b7280; cursor: not-allowed; }
+
+        /* --- CONTROL CENTER BOX (SLIDE UP) --- */
+        #control-center {
+            position: absolute; bottom: -320px; right: 15px; width: 285px;
+            background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(25px);
+            border-radius: 16px; border: 1px solid rgba(255,255,255,0.12);
+            padding: 20px; color: white; display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 -10px 35px rgba(0,0,0,0.35);
+            transition: bottom 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+            z-index: 10001;
         }
-        #start-btn { width: 36px; height: 36px; background: transparent; border: none; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
-        #start-btn:hover { transform: scale(1.15) rotate(15deg); }
-        .system-tray { color: white; font-size: 12px; text-align: right; pointer-events: none; line-height: 1.3; }
+        #control-center.active { bottom: 60px; }
+        
+        .cc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .cc-tile {
+            background: rgba(255,255,255,0.08); padding: 12px; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+            transition: background 0.2s; font-size: 12px; font-weight: 500;
+        }
+        .cc-tile.active { background: #38bdf8; color: #090d16; }
+        .cc-slider-box { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+        .cc-slider { -webkit-appearance: none; width: 100%; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; outline: none; }
+        .cc-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; background: #38bdf8; border-radius: 50%; cursor: pointer; }
 
-        /* --- START MENU POPUP --- */
+        /* --- TASKBAR & START MENU --- */
+        #taskbar {
+            width: 100%; height: 48px; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(20px);
+            position: absolute; bottom: 0; left: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 9999;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        #start-btn { font-size: 24px; background: transparent; border: none; cursor: pointer; transition: transform 0.2s; }
+        #start-btn:hover { transform: scale(1.15); }
+        
+        .taskbar-right { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .system-tray { color: white; font-size: 11px; text-align: right; line-height: 1.3; }
+
         #start-menu {
-            position: absolute; bottom: 58px; left: 15px; width: 280px; height: 360px;
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            position: absolute; bottom: 58px; left: 15px; width: 280px; height: 380px;
+            background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(25px); border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             display: none; flex-direction: column; padding: 15px; z-index: 10000; color: white;
         }
-        #start-menu h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; color: #38bdf8; }
-        .start-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.2s; font-size: 14px; }
+        #start-menu h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; color: #38bdf8; }
+        .start-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .start-item:hover { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <!-- SCREEN BOOTING -->
+    <!-- OVERLAY KECERAHAN GLOBAL -->
+    <div id="brightness-overlay"></div>
+
+    <!-- BOOTING SCREEN -->
     <div id="boot-screen">
         <div class="boot-logo">☁️</div>
         <div class="boot-title">SKY OS</div>
-        <div class="boot-version">System Version 1.0</div>
-        <div class="spinner"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
     </div>
 
-    <!-- MAIN SYSTEM CONTAINER -->
+    <!-- LOCK SCREEN (SISTEM SWIPE / KLIK LANGSUNG MASUK) -->
+    <div id="lock-screen" onclick="unlockSystem()">
+        <div class="lock-header">
+            <div class="lock-clock" id="lock-clock">00:00</div>
+            <div class="lock-date" id="lock-date">Loading Date...</div>
+        </div>
+        <div class="enter-btn-box">
+            KLIK UNTUK MASUK
+        </div>
+    </div>
+
+    <!-- UTAMA CONTAINER SYSTEM -->
     <div id="os-container">
         
-        <!-- DESKTOP APP SHORTCUTS -->
+        <!-- WIDGETS GROUP -->
+        <div class="widgets-zone">
+            <!-- Widget Jam -->
+            <div class="widget">
+                <div class="widget-time" id="widget-time">00:00</div>
+                <div class="widget-quote">"Sky OS v1.3 - Lancar jaya tanpa hambatan!"</div>
+            </div>
+            <!-- Widget Kalender -->
+            <div class="widget" style="padding: 12px;">
+                <div style="font-size:12px; font-weight:bold; color:#38bdf8; text-align:center;" id="cal-month-title">Mei 2026</div>
+                <div class="cal-grid" id="cal-days-box">
+                    <!-- Generate via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SHORTCUTS DESKTOP AREA -->
         <div id="desktop">
             <div class="shortcut" onclick="openWindow('win-settings')">
-                <div class="icon">⚙️</div>
+                <div class="icon-box">⚙️</div>
                 <div class="label">Settings</div>
             </div>
             <div class="shortcut" onclick="openWindow('win-notepad')">
-                <div class="icon">📝</div>
+                <div class="icon-box">📝</div>
                 <div class="label">Notepad</div>
             </div>
             <div class="shortcut" onclick="openWindow('win-browser')">
-                <div class="icon">🌐</div>
+                <div class="icon-box">🌐</div>
                 <div class="label">Sky Web</div>
             </div>
-            <div class="shortcut" onclick="openWindow('win-calc')">
-                <div class="icon">🧮</div>
-                <div class="label">Calculator</div>
+            <div class="shortcut" onclick="openWindow('win-store')">
+                <div class="icon-box">🏪</div>
+                <div class="label">Sky Store</div>
+            </div>
+            <!-- Aplikasi terinstall dinamis bakal muncul di bawah sini -->
+            <div class="shortcut" id="short-cmd" style="display:none;" onclick="openWindow('win-cmd')">
+                <div class="icon-box">💻</div>
+                <div class="label">Terminal</div>
+            </div>
+            <div class="shortcut" id="short-music" style="display:none;" onclick="openWindow('win-music')">
+                <div class="icon-box">🎵</div>
+                <div class="label">Sky Music</div>
             </div>
         </div>
 
-        <!-- APP WINDOW: SETTINGS (ALA SMARTPHONE) -->
-        <div id="win-settings" class="window" style="top: 10%; left: 15%; width: 400px; height: 480px;">
+        <!-- JENDELA: SETTINGS -->
+        <div id="win-settings" class="window" style="top: 8%; left: 8%; width: 400px; height: 440px;">
             <div class="window-header" onmousedown="dragElement(this.parentElement)">
                 <div class="window-title">⚙️ Settings</div>
-                <div class="window-controls">
-                    <button class="win-btn minimize" onclick="closeWindow('win-settings')"></button>
-                    <button class="win-btn close" onclick="closeWindow('win-settings')"></button>
-                </div>
+                <div class="window-controls"><button class="win-btn close" onclick="closeWindow('win-settings')"></button></div>
             </div>
             <div class="window-body" style="background: #f4f5f7;">
-                <!-- Kotak Tulisan OS Gede Ala HP Zaman Sekarang -->
                 <div class="settings-banner">
                     <div class="os-big-title">Sky OS</div>
-                    <div class="os-version-tag">Version 1.0 Oficial</div>
+                    <div class="os-version-tag">Version 1.3 Stable</div>
                 </div>
-                <!-- Daftar Menu Pengaturan -->
                 <div class="settings-list">
-                    <div class="settings-item">
-                        <div class="settings-item-left"><span class="settings-icon">📱</span> Perangkat</div>
-                        <div class="settings-value">Virtual Desktop PC</div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-left"><span class="settings-icon">💾</span> Status Penyimpanan</div>
-                        <div class="settings-value">Aman / Lancar Jaya</div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-left"><span class="settings-icon">✨</span> Tampilan Tema</div>
-                        <div class="settings-value">Glassmorphism Modern</div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-left"><span class="settings-icon">🛡️</span> Keamanan Sistem</div>
-                        <div class="settings-value">Aktif (Enkripsi)</div>
+                    <h4 style="font-size:11px; color:#6b7280; margin-left:5px;">SISTEM & AKUN</h4>
+                    <div class="settings-group">
+                        <div class="settings-item"><div class="settings-item-left">👤 Tipe Keamanan</div><div style="font-size:12px; color:#10b981; font-weight:bold;">Bebas Sandi (Swipe)</div></div>
+                        <div class="settings-item"><div class="settings-item-left">📱 Status OS</div><div style="font-size:12px; color:#6b7280;">Aktif & Lancar Jaya</div></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- APP WINDOW: NOTEPAD -->
-        <div id="win-notepad" class="window" style="top: 15%; left: 25%;">
+        <!-- JENDELA: NOTEPAD -->
+        <div id="win-notepad" class="window" style="top: 15%; left: 18%;">
             <div class="window-header" onmousedown="dragElement(this.parentElement)">
                 <div class="window-title">📝 Notepad</div>
-                <div class="window-controls">
-                    <button class="win-btn minimize" onclick="closeWindow('win-notepad')"></button>
-                    <button class="win-btn close" onclick="closeWindow('win-notepad')"></button>
-                </div>
+                <div class="window-controls"><button class="win-btn close" onclick="closeWindow('win-notepad')"></button></div>
             </div>
-            <div class="window-body">
-                <textarea class="notepad-text" placeholder="Tulis catatan harian atau ide coding-mu di sini..."></textarea>
-            </div>
+            <div class="window-body"><textarea class="notepad-text" placeholder="Tulis catatan project web-mu di sini..."></textarea></div>
         </div>
 
-        <!-- APP WINDOW: BROWSER -->
-        <div id="win-browser" class="window" style="top: 8%; left: 35%; width: 550px; height: 380px;">
+        <!-- JENDELA: BROWSER -->
+        <div id="win-browser" class="window" style="top: 5%; left: 25%; width: 540px; height: 390px;">
             <div class="window-header" onmousedown="dragElement(this.parentElement)">
                 <div class="window-title">🌐 Sky Web Browser</div>
-                <div class="window-controls">
-                    <button class="win-btn minimize" onclick="closeWindow('win-browser')"></button>
-                    <button class="win-btn close" onclick="closeWindow('win-browser')"></button>
-                </div>
+                <div class="window-controls"><button class="win-btn close" onclick="closeWindow('win-browser')"></button></div>
             </div>
-            <div class="window-body" style="background: #f3f4f6;">
+            <div class="browser-bar">
                 <input type="text" class="browser-input" id="browser-url" value="https://www.wikipedia.org" onkeydown="if(event.key==='Enter') loadWeb()">
-                <iframe id="web-frame" class="browser-frame" src="https://www.wikipedia.org"></iframe>
+            </div>
+            <iframe id="web-frame" class="browser-frame" src="https://www.wikipedia.org"></iframe>
+        </div>
+
+        <!-- JENDELA: SKY APP STORE -->
+        <div id="win-store" class="window" style="top: 12%; left: 12%; width: 420px; height: 380px;">
+            <div class="window-header" onmousedown="dragElement(this.parentElement)">
+                <div class="window-title">🏪 Sky Store</div>
+                <div class="window-controls"><button class="win-btn close" onclick="closeWindow('win-store')"></button></div>
+            </div>
+            <div class="window-body" style="background:#f9fafb;">
+                <div class="store-grid">
+                    <div class="store-card">
+                        <div class="store-icon">💻</div>
+                        <div class="store-name">Terminal CMD</div>
+                        <button class="store-btn" id="btn-install-cmd" onclick="installApp('cmd')">PASANG</button>
+                    </div>
+                    <div class="store-card">
+                        <div class="store-icon">🎵</div>
+                        <div class="store-name">Sky Music</div>
+                        <button class="store-btn" id="btn-install-music" onclick="installApp('music')">PASANG</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- APP WINDOW: CALCULATOR -->
-        <div id="win-calc" class="window" style="top: 25%; left: 45%; width: 250px; height: 340px;">
+        <!-- JENDELA DATA TERINSTALL DINAMIS (TERMINAL CMD) -->
+        <div id="win-cmd" class="window" style="top: 20%; left: 22%; width: 450px; height: 320px;">
             <div class="window-header" onmousedown="dragElement(this.parentElement)">
-                <div class="window-title">🧮 Calculator</div>
-                <div class="window-controls">
-                    <button class="win-btn minimize" onclick="closeWindow('win-calc')"></button>
-                    <button class="win-btn close" onclick="closeWindow('win-calc')"></button>
+                <div class="window-title">💻 Sky Terminal</div>
+                <div class="window-controls"><button class="win-btn close" onclick="closeWindow('win-cmd')"></button></div>
+            </div>
+            <div class="window-body">
+                <div class="terminal-body" onclick="document.getElementById('cmd-input').focus()">
+                    <div class="terminal-output" id="cmd-screen">Sky OS Terminal Engine [Version 1.3]&#10;Ketik "help" untuk daftar perintah.&#10;</div>
+                    <div class="terminal-input-line">
+                        <span class="terminal-prefix">sky-os></span>
+                        <input type="text" id="cmd-input" class="cmd-field" onkeydown="runCommand(event)">
+                    </div>
                 </div>
             </div>
-            <div class="window-body" style="background: #fff; display: flex; flex-direction: column;">
-                <input type="text" id="calc-screen" readonly>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px; flex: 1; background: #f9fafb;">
-                    <button onclick="clearCalc()" style="grid-column: span 2; background: #ef4444; color: white; border:none; border-radius:6px; cursor:pointer;">C</button>
-                    <button onclick="pressCalc('/')" style="background:#e5e7eb; border:none; border-radius:6px; cursor:pointer;">/</button>
-                    <button onclick="pressCalc('*')" style="background:#e5e7eb; border:none; border-radius:6px; cursor:pointer;">x</button>
-                    <button onclick="pressCalc('7')">7</button><button onclick="pressCalc('8')">8</button><button onclick="pressCalc('9')">9</button>
-                    <button onclick="pressCalc('-')" style="background:#e5e7eb; border:none; border-radius:6px;">-</button>
-                    <button onclick="pressCalc('4')">4</button><button onclick="pressCalc('5')">5</button><button onclick="pressCalc('6')">6</button>
-                    <button onclick="pressCalc('+')" style="background:#e5e7eb; border:none; border-radius:6px;">+</button>
-                    <button onclick="pressCalc('1')">1</button><button onclick="pressCalc('2')">2</button><button onclick="pressCalc('3')">3</button>
-                    <button onclick="calculate()" style="grid-row: span 2; background: #0284c7; color: white; border:none; border-radius:6px; cursor:pointer;">=</button>
-                    <button onclick="pressCalc('0')" style="grid-column: span 2;">0</button><button onclick="pressCalc('.')">.</button>
+        </div>
+
+        <!-- JENDELA DATA TERINSTALL DINAMIS (MUSIC PLAYER) -->
+        <div id="win-music" class="window" style="top: 22%; left: 30%; width: 320px; height: 290px;">
+            <div class="window-header" onmousedown="dragElement(this.parentElement)">
+                <div class="window-title">🎵 Sky Music Player</div>
+                <div class="window-controls"><button class="win-btn close" onclick="closeWindow('win-music')"></button></div>
+            </div>
+            <div class="window-body" style="background: #0f172a; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div id="music-disc" style="width: 90px; height: 90px; background: linear-gradient(45deg, #1e293b, #334155); border-radius: 50%; border: 4px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 12px; transition: transform 0.1s linear;">🎵</div>
+                <h4 style="font-size: 13px; font-weight:600; margin-bottom:15px;">Lofi Virtual Stream</h4>
+                <audio id="audio-player" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="toggleMusic()" id="play-btn" style="width: 40px; height: 40px; background: #38bdf8; border: none; border-radius: 50%; font-size: 16px; cursor: pointer; color:#0f172a;">▶</button>
+                    <button onclick="stopMusic()" style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; font-size: 14px; cursor: pointer; color:white;">⏹</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- CONTROL CENTER PANEL BOX (SLIDE UP) -->
+        <div id="control-center">
+            <h4 style="font-size:13px; font-weight:600; letter-spacing:0.5px;">Control Center</h4>
+            <div class="cc-grid">
+                <div class="cc-tile active" id="wifi-tile" onclick="this.classList.toggle('active')"><span>📶</span><span>Wi-Fi</span></div>
+                <div class="cc-tile active" id="bt-tile" onclick="this.classList.toggle('active')"><span>🔷</span><span>Bluetooth</span></div>
+            </div>
+            <div class="cc-slider-box">
+                <div style="display:flex; justify-content:space-between;"><span>🔆 Brightness</span><span id="bright-val">100%</span></div>
+                <input type="range" class="cc-slider" min="15" max="100" value="100" oninput="adjustBrightness(this.value)">
+            </div>
+            <div style="font-size:11px; opacity:0.7; display:flex; justify-content:space-between; margin-top:5px;">
+                <span>🔋 Battery Status</span><span>100% (Charging)</span>
             </div>
         </div>
 
         <!-- START MENU -->
         <div id="start-menu">
-            <h3>Sky OS Menu</h3>
+            <h3>Sky OS Pro Menu</h3>
             <div class="start-item" onclick="openWindow('win-settings'); toggleStart();">⚙️ Settings</div>
             <div class="start-item" onclick="openWindow('win-notepad'); toggleStart();">📝 Notepad</div>
             <div class="start-item" onclick="openWindow('win-browser'); toggleStart();">🌐 Sky Web</div>
-            <div class="start-item" onclick="openWindow('win-calc'); toggleStart();">🧮 Calculator</div>
-            <div style="margin-top: auto; font-size: 11px; text-align: center; color: #64748b;">Powered by Sky OS Engine</div>
+            <div class="start-item" onclick="openWindow('win-store'); toggleStart();">🏪 Sky Store</div>
+            <div class="start-item" id="start-cmd" style="display:none;" onclick="openWindow('win-cmd'); toggleStart();">💻 Terminal CMD</div>
+            <div class="start-item" id="start-music" style="display:none;" onclick="openWindow('win-music'); toggleStart();">🎵 Sky Music</div>
+            <div style="margin-top:auto; font-size:10px; text-align:center; opacity:0.5;" onclick="lockSystem()">🔒 Log Out (Kunci)</div>
         </div>
 
-        <!-- TASKBAR SYSTEM -->
+        <!-- TASKBAR BOTTOM SYSTEM -->
         <div id="taskbar">
             <button id="start-btn" onclick="toggleStart()">☁️</button>
-            <div class="system-tray">
-                <div id="clock">00:00</div>
-                <div id="date" style="font-size: 10px; color: #94a3b8;">01/01/2026</div>
+            <div class="taskbar-right" onclick="toggleControlCenter()">
+                <span style="color:white; font-size:13px; letter-spacing:2px;">📶🔋</span>
+                <div class="system-tray">
+                    <div id="clock">00:00</div>
+                    <div id="date" style="font-size:9px; color:#94a3b8;">17/05/2026</div>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- LOGIC SYSTEM CODE ENGINE -->
     <script>
-        // 1. Proses Booting Awal Berjalan Selama 3 Detik
+        let maxZIndex = 10;
+        let musicRotation = 0;
+        let musicInterval = null;
+
+        // 1. Booting Engine
         window.addEventListener('DOMContentLoaded', () => {
+            generateCalendar();
             setTimeout(() => {
-                const bootScreen = document.getElementById('boot-screen');
-                const osContainer = document.getElementById('os-container');
-                bootScreen.style.opacity = '0';
-                osContainer.style.opacity = '1';
-                setTimeout(() => bootScreen.style.display = 'none', 800);
-            }, 3000); // 3000ms = 3 detik durasi loading screen
+                const boot = document.getElementById('boot-screen');
+                boot.style.opacity = '0';
+                boot.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    boot.style.display = 'none';
+                    document.getElementById('lock-screen').style.display = 'flex';
+                }, 600);
+            }, 2300);
         });
 
-        // 2. Window Handling (Buka, Tutup, Kedalaman Fokus Layer)
-        let maxZIndex = 10;
+        // 2. Layar Kunci Tanpa Sandi (Klik Langsung Masuk)
+        function unlockSystem() {
+            const lock = document.getElementById('lock-screen');
+            lock.style.transform = 'translateY(-100%)';
+            setTimeout(() => lock.style.display = 'none', 600);
+        }
+        function lockSystem() {
+            const lock = document.getElementById('lock-screen');
+            lock.style.display = 'flex';
+            setTimeout(() => lock.style.transform = 'translateY(0)', 10);
+            document.getElementById('start-menu').style.display = 'none';
+        }
+
+        // 3. Jendela (Windows) Controller
         function openWindow(id) {
             const win = document.getElementById(id);
             win.style.display = 'flex';
             maxZIndex++;
             win.style.zIndex = maxZIndex;
         }
-        function closeWindow(id) { document.getElementById(id).style.display = 'none'; }
+        function closeWindow(id) {
+            document.getElementById(id).style.display = 'none';
+            if(id === 'win-music') stopMusic();
+        }
         function toggleStart() {
             const start = document.getElementById('start-menu');
             start.style.display = start.style.display === 'flex' ? 'none' : 'flex';
+            document.getElementById('control-center').classList.remove('active');
+        }
+        function toggleControlCenter() {
+            const cc = document.getElementById('control-center');
+            cc.classList.toggle('active');
+            document.getElementById('start-menu').style.display = 'none';
         }
         document.getElementById('desktop').addEventListener('click', () => {
             document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('control-center').classList.remove('active');
         });
 
-        // 3. Drag and Drop Engine Jendela
+        // 4. Fitur Install / Pasang Aplikasi dari Sky Store
+        function installApp(type) {
+            if(type === 'cmd') {
+                document.getElementById('short-cmd').style.display = 'flex';
+                document.getElementById('start-cmd').style.display = 'flex';
+                document.getElementById('btn-install-cmd').innerText = 'TERPASANG';
+                document.getElementById('btn-install-cmd').classList.add('installed');
+            } else if(type === 'music') {
+                document.getElementById('short-music').style.display = 'flex';
+                document.getElementById('start-music').style.display = 'flex';
+                document.getElementById('btn-install-music').innerText = 'TERPASANG';
+                document.getElementById('btn-install-music').classList.add('installed');
+            }
+        }
+
+        // 5. Kecerahan Layar Real
+        function adjustBrightness(val) {
+            document.getElementById('bright-val').innerText = val + "%";
+            const opacity = (100 - val) / 100;
+            document.getElementById('brightness-overlay').style.background = `rgba(0, 0, 0, ${opacity})`;
+        }
+
+        // 6. Drag & Drop Engine Jendela
         function dragElement(elmnt) {
             var p1 = 0, p2 = 0, p3 = 0, p4 = 0;
             elmnt.onmousedown = function() { maxZIndex++; elmnt.style.zIndex = maxZIndex; };
@@ -414,26 +579,96 @@
             };
         }
 
-                // 4. Sinkronisasi Jam & Tanggal Sistem
+        // 7. Terminal CMD Logic Engine
+        function runCommand(e) {
+            if(e.key === 'Enter') {
+                const inputField = document.getElementById('cmd-input');
+                const cmd = inputField.value.trim().toLowerCase();
+                const scr = document.getElementById('cmd-screen');
+                let output = "";
+
+                if(cmd === 'help') {
+                    output = "Daftar Perintah:\n- help : Bantuan\n- clear : Bersihkan layar\n- about : Info Sky OS\n- matrix : Efek keren";
+                } else if(cmd === 'clear') {
+                    scr.innerHTML = "";
+                    inputField.value = "";
+                    return;
+                } else if(cmd === 'about') {
+                    output = "Sky OS v1.3 Stable.\nBuild with pure passion for engineering.";
+                } else if(cmd === 'matrix') {
+                    output = "01010101010110010101010101\nSKY OS ENCRYPTED HACK SYSTEM ACTIVE\n10101010010101010101010101";
+                } else if(cmd !== "") {
+                    output = `Perintah "${cmd}" tidak dikenal.`;
+                }
+
+                if(cmd !== "") {
+                    scr.innerHTML += `sky-os> ${inputField.value}\n${output}\n\n`;
+                }
+                inputField.value = "";
+                scr.parentElement.scrollTop = scr.parentElement.scrollHeight;
+            }
+        }
+
+        // 8. Widget Kalender Generator Dinamis
+        function generateCalendar() {
+            const daysBox = document.getElementById('cal-days-box');
+            const now = new Date();
+            const today = now.getDate();
+            const daysInWeek = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];
+            
+            // Header nama hari
+            daysInWeek.forEach(d => daysBox.innerHTML += `<div class="cal-header">${d}</div>`);
+            
+            // Generate simulasi tanggal 1-31
+            for(let i=1; i<=31; i++) {
+                if(i === today) {
+                    daysBox.innerHTML += `<div class="cal-day active">${i}</div>`;
+                } else {
+                    daysBox.innerHTML += `<div class="cal-day">${i}</div>`;
+                }
+            }
+            document.getElementById('cal-month-title').innerText = now.toLocaleDateString('id-ID', {month: 'long', year: 'numeric'});
+        }
+
+        // 9. Sinkronisasi Waktu
         function runClock() {
-            const date = new Date();
-            document.getElementById('clock').innerText = date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('date').innerText = date.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
+            const d = new Date();
+            const time = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+            const dateText = d.toLocaleDateString('id-ID', {weekday: 'long', day: '2-digit', month: 'long'});
+            const pureDate = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
+            
+            document.getElementById('clock').innerText = time;
+            document.getElementById('date').innerText = pureDate;
+            document.getElementById('lock-clock').innerText = time;
+            document.getElementById('lock-date').innerText = dateText;
+            document.getElementById('widget-time').innerText = time;
         }
         setInterval(runClock, 1000); runClock();
 
-        // 5. Fitur Penjelajah Web (Sky Web Browser)
+        // 10. Web Browser
         function loadWeb() {
             let val = document.getElementById('browser-url').value;
             if (!val.startsWith('http://') && !val.startsWith('https://')) val = 'https://' + val;
             document.getElementById('web-frame').src = val;
         }
 
-        // 6. Fitur Kalkulator Terintegrasi
-        const scr = document.getElementById('calc-screen');
-        function pressCalc(v) { scr.value += v; }
-        function clearCalc() { scr.value = ''; }
-        function calculate() { try { scr.value = eval(scr.value); } catch(e) { scr.value = 'Error'; } }
+        // 11. Musik Engine
+        const audio = document.getElementById('audio-player');
+        const disc = document.getElementById('music-disc');
+        const playBtn = document.getElementById('play-btn');
+
+        function toggleMusic() {
+            if (audio.paused) {
+                audio.play(); playBtn.innerText = "⏸";
+                musicInterval = setInterval(() => { musicRotation += 3; disc.style.transform = `rotate(${musicRotation}deg)`; }, 30);
+            } else {
+                audio.pause(); playBtn.innerText = "▶"; clearInterval(musicInterval);
+            }
+        }
+        function stopMusic() {
+            audio.pause(); audio.currentTime = 0; playBtn.innerText = "▶";
+            clearInterval(musicInterval); musicRotation = 0; disc.style.transform = "rotate(0deg)";
+        }
     </script>
 </body>
 </html>
