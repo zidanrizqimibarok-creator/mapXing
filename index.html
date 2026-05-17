@@ -2,424 +2,438 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mapXing Titan Pro - Ultimate 3D Ecosystem</title>
-    
-    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky OS v1.0</title>
     <style>
-        :root { 
-            --accent: #007AFF; --success: #34C759; --danger: #FF3B30; --warning: #FF9500;
-            --bg: #000; --card: rgba(20, 20, 20, 0.98); --text: #fff;
-            --glass: rgba(255, 255, 255, 0.1);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-        .light-mode { --bg: #f2f2f7; --card: rgba(255, 255, 255, 0.95); --text: #000; --glass: rgba(0, 0, 0, 0.05); }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'SF Pro Display', -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s background; }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
 
-        /* --- PREMIUM BOOTING --- */
+        /* --- SCREEN ANIMASI BOOTING --- */
         #boot-screen {
-            position: fixed; inset: 0; background: #000; z-index: 10000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0b0f19;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: opacity 0.8s ease;
         }
-        .loading-ring {
-            width: 160px; height: 160px; border: 3px solid rgba(255,255,255,0.05);
-            border-top: 3px solid var(--accent); border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #boot-screen img { position: absolute; width: 100px; border-radius: 28px; filter: drop-shadow(0 0 20px rgba(0,122,255,0.4)); }
 
-        /* --- GPS FORCE PERMISSION --- */
-        #gps-lock {
-            position: fixed; inset: 0; background: var(--bg); z-index: 9995;
-            display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center;
+        .boot-logo {
+            font-size: 72px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite ease-in-out;
         }
-        .gps-card { background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid var(--glass); width: 85%; max-width: 400px; }
 
-        /* --- CUSTOM MODAL --- */
-        .mx-modal {
-            position: fixed; top: -100%; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 350px; background: var(--card);
-            backdrop-filter: blur(30px); border-radius: 25px; z-index: 11000;
-            padding: 25px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            border: 1px solid var(--glass); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        .boot-title {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #30cfd0, #330867);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .mx-modal.show { top: 30px; }
 
-        /* --- DYNAMIC ISLAND --- */
-        #island {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 36px; background: #000; border-radius: 20px;
-            z-index: 2000; display: none; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            border: 1.5px solid #333; overflow: hidden;
+        .boot-version {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 40px;
         }
-        #island.active { width: 92%; height: 110px; border-radius: 35px; border-color: var(--accent); }
-        .isl-content { opacity: 0; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 20px 30px; box-sizing: border-box; }
-        #island.active .isl-content { opacity: 1; }
 
-        /* --- AUTH SYSTEM --- */
-        #auth-screen {
-            position: fixed; inset: 0; z-index: 9999; display: none;
-            background: #000; flex-direction: column; align-items: center; justify-content: center;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #38bdf8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        .auth-box { 
-            width: 85%; max-width: 400px; background: var(--card); padding: 45px 30px; 
-            border-radius: 40px; border: 1px solid var(--glass);
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        /* --- MAIN SYSTEM DESKTOP --- */
+        #os-container {
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            opacity: 0;
+            transition: opacity 1s ease;
         }
+
+        #desktop {
+            width: 100%;
+            height: calc(100% - 48px);
+            position: relative;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 20px;
+        }
+
+        /* Shortcuts */
+        .shortcut {
+            width: 85px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s, transform 0.1s;
+            color: white;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .shortcut:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+        .shortcut:active { transform: scale(0.95); }
+        .shortcut .icon { font-size: 36px; margin-bottom: 6px; }
+        .shortcut .label { font-size: 12px; font-weight: 500; }
+
+        /* --- INTERFASE JENDELA MODERN --- */
+        .window {
+            position: absolute;
+            width: 460px;
+            height: 340px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: winOpen 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        @keyframes winOpen { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .window-header {
+            background: rgba(243, 244, 246, 0.6);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .window-title { font-size: 13px; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 8px; }
+        .window-controls { display: flex; gap: 8px; }
         
-        #header-profile {
-            position: absolute; top: 75px; left: 15px; z-index: 900;
-            display: none; align-items: center; background: var(--card);
-            padding: 10px 20px; border-radius: 50px; border: 1px solid var(--glass);
+        .win-btn {
+            width: 14px;
+            height: 14px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0;
+            position: relative;
+        }
+        .win-btn.close { background: #ff5f56; }
+        .win-btn.minimize { background: #ffbd2e; }
+        .win-btn:hover::after {
+            content: '•'; font-size: 12px; color: rgba(0,0,0,0.5);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
 
-        /* --- MAP & VEHICLE --- */
-        #map { position: absolute; inset: 0; display: none; }
-        .v-container { position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .v-glow { position: absolute; width: 40px; height: 40px; background: var(--accent); border-radius: 50%; filter: blur(15px); opacity: 0.4; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 0.2; } 100% { transform: scale(0.8); opacity: 0.4; } }
-        .vehicle-img { width: 48px; height: 48px; z-index: 2; transform: rotate(-90deg); }
+        .window-body { flex: 1; overflow: auto; color: #1f2937; position: relative; }
 
-        .ui-panel {
-            position: absolute; bottom: 25px; left: 15px; right: 15px;
-            background: var(--card); backdrop-filter: blur(40px);
-            border-radius: 35px; padding: 30px; z-index: 1000;
-            border: 1px solid var(--glass); transition: 0.6s transform cubic-bezier(0.23, 1, 0.32, 1);
+        /* --- APLIKASI SETTINGS STYLE MODERN HP --- */
+        .settings-banner {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .ui-panel.hide { transform: translateY(130%); }
-
-        input { 
-            width: 100%; box-sizing: border-box; background: var(--glass); 
-            border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 20px; 
-            color: var(--text); margin-bottom: 12px; font-size: 16px; outline: none;
+        .settings-banner::before {
+            content: ''; position: absolute; top: -50%; left: -20%; width: 100%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
         }
-
-        .btn { padding: 18px; border-radius: 22px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .blue { background: var(--accent); color: white; box-shadow: 0 10px 20px rgba(0,122,255,0.3); }
-        .green { background: var(--success); color: white; }
-        .red { background: var(--danger); color: white; }
+        .settings-banner .os-big-title { font-size: 32px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .settings-banner .os-version-tag { background: rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; margin-top: 8px; font-weight: 500; }
         
-        #recenter-btn {
-            position: absolute; right: 15px; bottom: 320px; z-index: 1500;
-            width: 55px; height: 55px; border-radius: 50%; background: var(--accent);
-            border: none; color: white; display: none; font-size: 22px; box-shadow: 0 8px 20px rgba(0,122,255,0.4);
+        .settings-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .settings-item {
+            background: white; padding: 12px 16px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02);
         }
+        .settings-item-left { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 14px; }
+        .settings-icon { font-size: 20px; }
+        .settings-value { color: #6b7280; font-size: 13px; }
 
-        /* --- 3D MARKER POI --- */
-        .poi-marker { font-size: 30px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); cursor: pointer; }
+        /* Notepad & Browser */
+        textarea.notepad-text { width: 100%; height: 100%; border: none; padding: 15px; resize: none; outline: none; font-size: 14px; background: transparent; line-height: 1.5; }
+        .browser-input { width: calc(100% - 20px); padding: 8px 12px; margin: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; outline: none; font-size: 13px; }
+        .browser-frame { width: 100%; height: calc(100% - 55px); border: none; background: white; }
+
+        /* Kalkulator */
+        #calc-screen { width: 100%; height: 50px; text-align: right; padding: 10px; font-size: 22px; border: none; background: rgba(0,0,0,0.03); outline: none; font-weight: 600; }
+
+        /* --- TASKBAR AREA --- */
+        #taskbar {
+            width: 100%; height: 48px; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            position: absolute; bottom: 0; left: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 9999;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        #start-btn { width: 36px; height: 36px; background: transparent; border: none; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+        #start-btn:hover { transform: scale(1.15) rotate(15deg); }
+        .system-tray { color: white; font-size: 12px; text-align: right; pointer-events: none; line-height: 1.3; }
+
+        /* --- START MENU POPUP --- */
+        #start-menu {
+            position: absolute; bottom: 58px; left: 15px; width: 280px; height: 360px;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            display: none; flex-direction: column; padding: 15px; z-index: 10000; color: white;
+        }
+        #start-menu h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; color: #38bdf8; }
+        .start-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.2s; font-size: 14px; }
+        .start-item:hover { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-<div id="boot-screen">
-    <div class="loading-ring"></div>
-    <img src="https://i.ibb.co.com/PG4vKZJr/file-000000002cd871fa905a8a3df61564b4.png" alt="mapXing">
-</div>
-
-<div id="gps-lock">
-    <div class="gps-card">
-        <h1 style="font-size: 50px; margin: 0;">🛰️</h1>
-        <h2>Akses Lokasi Aktif</h2>
-        <p style="opacity: 0.6;">mapXing butuh izin GPS asli agar Navigasi 3D tidak eror dan posisi kamu akurat.</p>
-        <button id="gps-trigger-btn" class="btn blue" style="width:100%" onclick="requestGpsPermission()">Berikan Izin Sekarang</button>
-        <p id="gps-status" style="font-size: 12px; color: var(--danger); margin-top: 10px; display: none;">Izin diperlukan untuk melanjutkan!</p>
+    <!-- SCREEN BOOTING -->
+    <div id="boot-screen">
+        <div class="boot-logo">☁️</div>
+        <div class="boot-title">SKY OS</div>
+        <div class="boot-version">System Version 1.0</div>
+        <div class="spinner"></div>
     </div>
-</div>
 
-<div id="mx-modal" class="mx-modal">
-    <h3 id="modal-title" style="margin-top:0">Notifikasi</h3>
-    <p id="modal-msg" style="font-size: 14px; opacity: 0.8;"></p>
-    <button class="btn blue" style="width:100%" onclick="closeModal()">Oke</button>
-</div>
-
-<div id="auth-screen">
-    <div class="auth-box">
-        <h2>SkyMail Portal</h2>
-        <input type="text" id="u-user" placeholder="Username">
-        <input type="password" id="u-pass" placeholder="Password">
-        <div style="display: flex; gap: 10px;">
-            <button class="btn blue" style="flex:1" onclick="handleAuth('login')">Masuk</button>
-            <button class="btn green" style="flex:1" onclick="handleAuth('signup')">Daftar</button>
+    <!-- MAIN SYSTEM CONTAINER -->
+    <div id="os-container">
+        
+        <!-- DESKTOP APP SHORTCUTS -->
+        <div id="desktop">
+            <div class="shortcut" onclick="openWindow('win-settings')">
+                <div class="icon">⚙️</div>
+                <div class="label">Settings</div>
+            </div>
+            <div class="shortcut" onclick="openWindow('win-notepad')">
+                <div class="icon">📝</div>
+                <div class="label">Notepad</div>
+            </div>
+            <div class="shortcut" onclick="openWindow('win-browser')">
+                <div class="icon">🌐</div>
+                <div class="label">Sky Web</div>
+            </div>
+            <div class="shortcut" onclick="openWindow('win-calc')">
+                <div class="icon">🧮</div>
+                <div class="label">Calculator</div>
+            </div>
         </div>
-    </div>
-</div>
 
-<div id="header-profile">
-    <div id="avatar" style="width:40px; height:40px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white;">?</div>
-    <div style="margin-left:12px;"><b id="display-name">User@sky.mail</b></div>
-    <button onclick="logout()" style="background:none; border:none; color:var(--danger); margin-left:15px; font-size:20px;">✕</button>
-</div>
-
-<div id="island">
-    <div class="isl-content">
-        <div>
-            <span id="isl-time" style="font-size:32px; font-weight:900; color:var(--success);">--</span><br>
-            <span id="isl-dist" style="font-size:14px; opacity:0.6;">0.0 KM</span>
+        <!-- APP WINDOW: SETTINGS (ALA SMARTPHONE) -->
+        <div id="win-settings" class="window" style="top: 10%; left: 15%; width: 400px; height: 480px;">
+            <div class="window-header" onmousedown="dragElement(this.parentElement)">
+                <div class="window-title">⚙️ Settings</div>
+                <div class="window-controls">
+                    <button class="win-btn minimize" onclick="closeWindow('win-settings')"></button>
+                    <button class="win-btn close" onclick="closeWindow('win-settings')"></button>
+                </div>
+            </div>
+            <div class="window-body" style="background: #f4f5f7;">
+                <!-- Kotak Tulisan OS Gede Ala HP Zaman Sekarang -->
+                <div class="settings-banner">
+                    <div class="os-big-title">Sky OS</div>
+                    <div class="os-version-tag">Version 1.0 Oficial</div>
+                </div>
+                <!-- Daftar Menu Pengaturan -->
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-item-left"><span class="settings-icon">📱</span> Perangkat</div>
+                        <div class="settings-value">Virtual Desktop PC</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-left"><span class="settings-icon">💾</span> Status Penyimpanan</div>
+                        <div class="settings-value">Aman / Lancar Jaya</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-left"><span class="settings-icon">✨</span> Tampilan Tema</div>
+                        <div class="settings-value">Glassmorphism Modern</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-left"><span class="settings-icon">🛡️</span> Keamanan Sistem</div>
+                        <div class="settings-value">Aktif (Enkripsi)</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="isl-icon">🚗</div>
+
+        <!-- APP WINDOW: NOTEPAD -->
+        <div id="win-notepad" class="window" style="top: 15%; left: 25%;">
+            <div class="window-header" onmousedown="dragElement(this.parentElement)">
+                <div class="window-title">📝 Notepad</div>
+                <div class="window-controls">
+                    <button class="win-btn minimize" onclick="closeWindow('win-notepad')"></button>
+                    <button class="win-btn close" onclick="closeWindow('win-notepad')"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <textarea class="notepad-text" placeholder="Tulis catatan harian atau ide coding-mu di sini..."></textarea>
+            </div>
+        </div>
+
+        <!-- APP WINDOW: BROWSER -->
+        <div id="win-browser" class="window" style="top: 8%; left: 35%; width: 550px; height: 380px;">
+            <div class="window-header" onmousedown="dragElement(this.parentElement)">
+                <div class="window-title">🌐 Sky Web Browser</div>
+                <div class="window-controls">
+                    <button class="win-btn minimize" onclick="closeWindow('win-browser')"></button>
+                    <button class="win-btn close" onclick="closeWindow('win-browser')"></button>
+                </div>
+            </div>
+            <div class="window-body" style="background: #f3f4f6;">
+                <input type="text" class="browser-input" id="browser-url" value="https://www.wikipedia.org" onkeydown="if(event.key==='Enter') loadWeb()">
+                <iframe id="web-frame" class="browser-frame" src="https://www.wikipedia.org"></iframe>
+            </div>
+        </div>
+
+        <!-- APP WINDOW: CALCULATOR -->
+        <div id="win-calc" class="window" style="top: 25%; left: 45%; width: 250px; height: 340px;">
+            <div class="window-header" onmousedown="dragElement(this.parentElement)">
+                <div class="window-title">🧮 Calculator</div>
+                <div class="window-controls">
+                    <button class="win-btn minimize" onclick="closeWindow('win-calc')"></button>
+                    <button class="win-btn close" onclick="closeWindow('win-calc')"></button>
+                </div>
+            </div>
+            <div class="window-body" style="background: #fff; display: flex; flex-direction: column;">
+                <input type="text" id="calc-screen" readonly>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px; flex: 1; background: #f9fafb;">
+                    <button onclick="clearCalc()" style="grid-column: span 2; background: #ef4444; color: white; border:none; border-radius:6px; cursor:pointer;">C</button>
+                    <button onclick="pressCalc('/')" style="background:#e5e7eb; border:none; border-radius:6px; cursor:pointer;">/</button>
+                    <button onclick="pressCalc('*')" style="background:#e5e7eb; border:none; border-radius:6px; cursor:pointer;">x</button>
+                    <button onclick="pressCalc('7')">7</button><button onclick="pressCalc('8')">8</button><button onclick="pressCalc('9')">9</button>
+                    <button onclick="pressCalc('-')" style="background:#e5e7eb; border:none; border-radius:6px;">-</button>
+                    <button onclick="pressCalc('4')">4</button><button onclick="pressCalc('5')">5</button><button onclick="pressCalc('6')">6</button>
+                    <button onclick="pressCalc('+')" style="background:#e5e7eb; border:none; border-radius:6px;">+</button>
+                    <button onclick="pressCalc('1')">1</button><button onclick="pressCalc('2')">2</button><button onclick="pressCalc('3')">3</button>
+                    <button onclick="calculate()" style="grid-row: span 2; background: #0284c7; color: white; border:none; border-radius:6px; cursor:pointer;">=</button>
+                    <button onclick="pressCalc('0')" style="grid-column: span 2;">0</button><button onclick="pressCalc('.')">.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- START MENU -->
+        <div id="start-menu">
+            <h3>Sky OS Menu</h3>
+            <div class="start-item" onclick="openWindow('win-settings'); toggleStart();">⚙️ Settings</div>
+            <div class="start-item" onclick="openWindow('win-notepad'); toggleStart();">📝 Notepad</div>
+            <div class="start-item" onclick="openWindow('win-browser'); toggleStart();">🌐 Sky Web</div>
+            <div class="start-item" onclick="openWindow('win-calc'); toggleStart();">🧮 Calculator</div>
+            <div style="margin-top: auto; font-size: 11px; text-align: center; color: #64748b;">Powered by Sky OS Engine</div>
+        </div>
+
+        <!-- TASKBAR SYSTEM -->
+        <div id="taskbar">
+            <button id="start-btn" onclick="toggleStart()">☁️</button>
+            <div class="system-tray">
+                <div id="clock">00:00</div>
+                <div id="date" style="font-size: 10px; color: #94a3b8;">01/01/2026</div>
+            </div>
+        </div>
+
     </div>
-</div>
 
-<div id="map"></div>
-<button id="recenter-btn" onclick="reCenter()">🎯</button>
-
-<div id="panel-search" class="ui-panel hide">
-    <input type="text" id="in-end" placeholder="🏁 Mau kemana hari ini?">
-    <div style="display: flex; gap: 10px;">
-        <button class="btn blue" style="flex:1" onclick="fetchRoute('driving')">🚗 Mobil</button>
-        <button class="btn blue" style="flex:1" onclick="fetchRoute('motorcycle')">🏍️ Motor</button>
-    </div>
-</div>
-
-<div id="panel-preview" class="ui-panel hide">
-    <h3 id="target-name" style="margin:0">Rute Ditemukan</h3>
-    <p id="route-meta" style="opacity:0.7;">Menghitung...</p>
-    <div style="display: flex; gap: 10px;">
-        <button class="btn green" style="flex:2" onclick="goLive()">Gas Navigasi</button>
-        <button class="btn red" style="flex:1" onclick="abortRoute()">Batal</button>
-    </div>
-</div>
-
-<div id="panel-live" class="ui-panel hide">
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-        <div style="font-size: 30px;">⬆️</div>
-        <b id="instr-text">Lurus terus ikuti jalur</b>
-    </div>
-    <button class="btn red" style="width:100%" onclick="finishJourney()">Selesai</button>
-</div>
-
-<script>
-    // --- DATABASE CONFIG ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
-        authDomain: "xbook-global26.firebaseapp.com",
-        databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "xbook-global26",
-        storageBucket: "xbook-global26.firebasestorage.app",
-        messagingSenderId: "384795261277",
-        appId: "1:384795261277:web:6a2b05dbea819b4f4590b4"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const API_KEY = 'Tfz4m6PaapeDYSxvNHUy';
-    let map, userPos, vehicle, isLive = false;
-    let transportMode = 'driving';
-    let watchId = null;
-
-    // --- BOOTING ---
-    window.onload = () => {
-        setTimeout(() => {
-            document.getElementById('boot-screen').style.opacity = '0';
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. Proses Booting Awal Berjalan Selama 3 Detik
+        window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                document.getElementById('boot-screen').remove();
-                checkSession();
-            }, 800);
-        }, 3000);
-    };
+                const bootScreen = document.getElementById('boot-screen');
+                const osContainer = document.getElementById('os-container');
+                bootScreen.style.opacity = '0';
+                osContainer.style.opacity = '1';
+                setTimeout(() => bootScreen.style.display = 'none', 800);
+            }, 3000); // 3000ms = 3 detik durasi loading screen
+        });
 
-    function showModal(title, msg) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-msg').innerText = msg;
-        document.getElementById('mx-modal').classList.add('show');
-    }
-    function closeModal() { document.getElementById('mx-modal').classList.remove('show'); }
-
-    // --- SESSION ---
-    function checkSession() {
-        const s = localStorage.getItem('map_session');
-        if(s) {
-            document.getElementById('display-name').innerText = s + "@sky.mail";
-            document.getElementById('avatar').innerText = s[0].toUpperCase();
-            document.getElementById('gps-lock').style.display = 'flex';
-        } else {
-            document.getElementById('auth-screen').style.display = 'flex';
+        // 2. Window Handling (Buka, Tutup, Kedalaman Fokus Layer)
+        let maxZIndex = 10;
+        function openWindow(id) {
+            const win = document.getElementById(id);
+            win.style.display = 'flex';
+            maxZIndex++;
+            win.style.zIndex = maxZIndex;
         }
-    }
-
-    async function handleAuth(type) {
-        const u = document.getElementById('u-user').value.trim().toLowerCase();
-        const p = document.getElementById('u-pass').value;
-        if(!u || p.length < 4) return showModal("Gagal", "Isi username & password minimal 4 karakter!");
-
-        const ref = db.ref('users/' + u);
-        const snap = await ref.once('value');
-
-        if(type === 'signup') {
-            if(snap.exists()) return showModal("Eror", "Username sudah terdaftar!");
-            await ref.set({ pass: p, mail: u + '@sky.mail' });
-            showModal("Sukses", "Akun SkyMail aktif! Silakan masuk.");
-        } else {
-            if(!snap.exists() || snap.val().pass !== p) return showModal("Gagal", "Username atau Password salah!");
-            localStorage.setItem('map_session', u);
-            location.reload();
+        function closeWindow(id) { document.getElementById(id).style.display = 'none'; }
+        function toggleStart() {
+            const start = document.getElementById('start-menu');
+            start.style.display = start.style.display === 'flex' ? 'none' : 'flex';
         }
-    }
+        document.getElementById('desktop').addEventListener('click', () => {
+            document.getElementById('start-menu').style.display = 'none';
+        });
 
-    function logout() { localStorage.clear(); location.reload(); }
-
-    // --- FIX GPS ENGINE ---
-    function requestGpsPermission() {
-        const statusEl = document.getElementById('gps-status');
-        const btn = document.getElementById('gps-trigger-btn');
-        
-        btn.innerText = "Mencoba Mengunci GPS...";
-        statusEl.style.display = 'none';
-
-        // Pengecekan HTTPS (Sangat penting untuk Geolocation browser)
-        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-            showModal("Protokol Keamanan", "Browser membutuhkan HTTPS agar fitur GPS aktif. Pastikan URL dimulai dengan https://");
-            btn.innerText = "Berikan Izin Sekarang";
-            return;
-        }
-
-        if ("geolocation" in navigator) {
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0
+        // 3. Drag and Drop Engine Jendela
+        function dragElement(elmnt) {
+            var p1 = 0, p2 = 0, p3 = 0, p4 = 0;
+            elmnt.onmousedown = function() { maxZIndex++; elmnt.style.zIndex = maxZIndex; };
+            elmnt.querySelector('.window-header').onmousedown = function(e) {
+                e = e || window.event; e.preventDefault();
+                p3 = e.clientX; p4 = e.clientY;
+                document.onmouseup = function() { document.onmouseup = null; document.onmousemove = null; };
+                document.onmousemove = function(e) {
+                    e = e || window.event; e.preventDefault();
+                    p1 = p3 - e.clientX; p2 = p4 - e.clientY;
+                    p3 = e.clientX; p4 = e.clientY;
+                    elmnt.style.top = (elmnt.offsetTop - p2) + "px";
+                    elmnt.style.left = (elmnt.offsetLeft - p1) + "px";
+                };
             };
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    userPos = [pos.coords.longitude, pos.coords.latitude];
-                    document.getElementById('gps-lock').style.display = 'none';
-                    initMap();
-                    startLiveTracking();
-                },
-                (err) => {
-                    let msg = "Terjadi kesalahan GPS.";
-                    if (err.code === 1) msg = "Izin ditolak! Aktifkan izin lokasi di pengaturan browser Chrome/Safari Anda.";
-                    if (err.code === 2) msg = "Posisi tidak tersedia.";
-                    if (err.code === 3) msg = "Waktu permintaan GPS habis.";
-                    
-                    showModal("GPS Error", msg);
-                    statusEl.innerText = msg;
-                    statusEl.style.display = 'block';
-                    btn.innerText = "Coba Lagi";
-                },
-                options
-            );
-        } else {
-            showModal("Tidak Support", "Browser Anda tidak mendukung fitur Geolocation.");
         }
-    }
 
-    function startLiveTracking() {
-        if(watchId) navigator.geolocation.clearWatch(watchId);
-        
-        watchId = navigator.geolocation.watchPosition(pos => {
-            userPos = [pos.coords.longitude, pos.coords.latitude];
-            const heading = pos.coords.heading || 0;
-            updateVehicleMarker(userPos, heading);
-            
-            if(isLive) {
-                map.flyTo({ center: userPos, bearing: heading, pitch: 85, zoom: 19 });
-            }
-        }, err => console.log("Tracking error:", err), { enableHighAccuracy: true });
-    }
-
-    function initMap() {
-        document.getElementById('map').style.display = 'block';
-        document.getElementById('panel-search').classList.remove('hide');
-        document.getElementById('header-profile').style.display = 'flex';
-        document.getElementById('island').style.display = 'flex';
-
-        map = new maplibregl.Map({
-            container: 'map',
-            style: `https://api.maptiler.com/maps/dark-v10/style.json?key=${API_KEY}`,
-            center: userPos, zoom: 16, pitch: 65, antialias: true
-        });
-
-        // 3D Buildings - Fitur Tambahan
-        map.on('load', () => {
-            map.addLayer({
-                'id': '3d-buildings',
-                'source': 'openmaptiles',
-                'source-layer': 'building',
-                'type': 'fill-extrusion',
-                'minzoom': 15,
-                'paint': {
-                    'fill-extrusion-color': '#333',
-                    'fill-extrusion-height': ['get', 'render_height'],
-                    'fill-extrusion-base': ['get', 'render_min_height'],
-                    'fill-extrusion-opacity': 0.8
-                }
-            });
-        });
-    }
-
-    function updateVehicleMarker(coords, bearing) {
-        if(!vehicle) {
-            const el = document.createElement('div');
-            el.className = 'v-container';
-            el.innerHTML = `<div class="v-glow"></div><img class="vehicle-img" src="${transportMode === 'driving' ? 'https://cdn-icons-png.flaticon.com/512/3082/3082349.png' : 'https://cdn-icons-png.flaticon.com/512/3119/3119047.png'}">`;
-            vehicle = new maplibregl.Marker({ element: el, rotationAlignment: 'map' }).setLngLat(coords).addTo(map);
-        } else {
-            vehicle.setLngLat(coords);
-            vehicle.setRotation(bearing - 90);
+                // 4. Sinkronisasi Jam & Tanggal Sistem
+        function runClock() {
+            const date = new Date();
+            document.getElementById('clock').innerText = date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('date').innerText = date.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
         }
-    }
+        setInterval(runClock, 1000); runClock();
 
-    // --- NAVIGATION ---
-    async function fetchRoute(mode) {
-        transportMode = mode;
-        const target = document.getElementById('in-end').value;
-        if(!target) return showModal("Input", "Mau pergi ke mana?");
-
-        const geo = await fetch(`https://api.maptiler.com/geocoding/${target}.json?key=${API_KEY}&proximity=${userPos[0]},${userPos[1]}`);
-        const res = await geo.json();
-        if(!res.features.length) return showModal("Error", "Lokasi tidak ditemukan.");
-
-        const dest = res.features[0].center;
-        const distance = turf.distance(turf.point(userPos), turf.point(dest));
-
-        if(distance > 10) return showModal("Jarak Jauh", "Maaf, simulasi rute maksimal 10KM dari posisi Anda saat ini.");
-
-        const osrm = `https://router.project-osrm.org/route/v1/${mode}/${userPos[0]},${userPos[1]};${dest[0]},${dest[1]}?overview=full&geometries=geojson`;
-        const rRes = await fetch(osrm);
-        const data = await rRes.json();
-
-        if(data.code === 'Ok') {
-            drawRoute(data.routes[0].geometry);
-            document.getElementById('target-name').innerText = res.features[0].text;
-            document.getElementById('route-meta').innerText = `${Math.round(data.routes[0].duration/60)} Menit • ${(data.routes[0].distance/1000).toFixed(1)} KM`;
-            
-            document.getElementById('panel-search').classList.add('hide');
-            document.getElementById('panel-preview').classList.remove('hide');
-
-            document.getElementById('isl-time').innerText = Math.round(data.routes[0].duration/60) + "m";
-            document.getElementById('isl-dist').innerText = (data.routes[0].distance/1000).toFixed(1) + " KM";
+        // 5. Fitur Penjelajah Web (Sky Web Browser)
+        function loadWeb() {
+            let val = document.getElementById('browser-url').value;
+            if (!val.startsWith('http://') && !val.startsWith('https://')) val = 'https://' + val;
+            document.getElementById('web-frame').src = val;
         }
-    }
 
-    function drawRoute(geo) {
-        if(map.getLayer('route')) { map.removeLayer('route'); map.removeSource('route'); }
-        map.addSource('route', { 'type': 'geojson', 'data': { 'type': 'Feature', 'geometry': geo } });
-        map.addLayer({ 'id': 'route', 'type': 'line', 'source': 'route', 'paint': { 'line-color': '#007AFF', 'line-width': 10, 'line-cap': 'round' } });
-        
-        const bounds = new maplibregl.LngLatBounds();
-        geo.coordinates.forEach(c => bounds.extend(c));
-        map.fitBounds(bounds, { padding: 100 });
-    }
-
-    function goLive() {
-        isLive = true;
-        document.getElementById('island').classList.add('active');
-        document.getElementById('panel-preview').classList.add('hide');
-        document.getElementById('panel-live').classList.remove('hide');
-        document.getElementById('recenter-btn').style.display = 'block';
-        map.flyTo({ center: userPos, zoom: 19, pitch: 85, duration: 2000 });
-    }
-
-    function reCenter() { map.flyTo({ center: userPos, zoom: 19, pitch: 85 }); }
-    function abortRoute() { location.reload(); }
-    function finishJourney() { location.reload(); }
-</script>
+        // 6. Fitur Kalkulator Terintegrasi
+        const scr = document.getElementById('calc-screen');
+        function pressCalc(v) { scr.value += v; }
+        function clearCalc() { scr.value = ''; }
+        function calculate() { try { scr.value = eval(scr.value); } catch(e) { scr.value = 'Error'; } }
+    </script>
 </body>
 </html>
